@@ -55,7 +55,7 @@ class GEOMETRY_TASK_GRAPH(object):
             Str_out += ":\t"
             for node_id, edge_id in self.adj_graph[i]:
                 Str_out += ( (self.node_id_name_list[node_id]) if is_showing_by_node_name else str(node_id) )
-                Str_out += "(%s:%d)\t" % ("biE" if self.edge_list[edge_id].is_bidirectional else "siE",edge_id)
+                Str_out += "(%s:%d)\t" % ("<-->" if self.edge_list[edge_id].is_bidirectional else " -->",edge_id)
             Str_out += "\n"
         Str_out += "-------------------------------------------------\n"
         # Print out
@@ -68,7 +68,7 @@ class GEOMETRY_TASK_GRAPH(object):
         This function print or return a beautiful layout of self.edge_list by string.
         """
         Str_out = "edge_list with <%d> edges\n" % self.num_edges
-        Str_out += "----------------------------------------------------------------------------------\n"
+        Str_out += "---------------------------------------------------------------------------------------\n"
         for i in range(self.num_edges):
             _E = self.edge_list[i]
             Str_out += "#%d:\t" % i
@@ -76,8 +76,8 @@ class GEOMETRY_TASK_GRAPH(object):
             to_node_id = _E.to_node_id
             from_node_str = (self.node_id_name_list[from_node_id]) if is_showing_by_node_name else str(from_node_id)
             to_node_str = (self.node_id_name_list[to_node_id]) if is_showing_by_node_name else str(to_node_id)
-            Str_out += from_node_str + " --> " + to_node_str + ", "
-            Str_out += "biE, " if _E.is_bidirectional else "siE, "
+            Str_out += from_node_str + (" <--> " if _E.is_bidirectional else "  --> ")
+            Str_out += to_node_str + ",\t"
             Str_out += "cap=%d, " % _E.capacity
             Str_out += "pTime=(%d, %d), " % (_E.min_pass_time, _E.max_pass_time)
             Str_out += "#ag=%d, " % _E.num_activated_agent
@@ -87,7 +87,7 @@ class GEOMETRY_TASK_GRAPH(object):
                 Str_out += str(_E.agent_dict[agent_id]) + ", "
             Str_out += "}"
             Str_out += "\n"
-        Str_out += "----------------------------------------------------------------------------------\n"
+        Str_out += "---------------------------------------------------------------------------------------\n"
         # Print out
         if is_printing:
             print(Str_out)
