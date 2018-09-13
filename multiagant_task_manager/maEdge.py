@@ -19,9 +19,10 @@ class EDGE(object):
         - num_activated_agent: The agent that marked is_activated=True
         - remained_capacity_now: This equals to (capacity - num_activated_agent)
     """
-    def __init__(self, param_dict):
+    #       EDGE(edge_id, from_node_id, to_node_id, is_bidirectional, capacity, min_pass_time, max_pass_time)
+    def __init__(self, edge_id, from_node_id, to_node_id, is_bidirectional=True, capacity=1, min_pass_time=0, max_pass_time=None):
         """
-        param_dict includes: (* denote the "must-have"(mandatory) )
+        inputs (* denote the "must-have"(mandatory) )
         * edge_id
         * from_node_id
         * to_node_id
@@ -33,17 +34,14 @@ class EDGE(object):
         # Properties of the edge
         #--------------------------------------#
         # The following parameters are mandatory
-        # ** Important: If these parameters are not provided,
-        #               the program will crash directly (intentionally).
-        self.edge_id = int(param_dict['edge_id'])
-        self.from_node_id = int(param_dict['from_node_id'])
-        self.to_node_id = int(param_dict['to_node_id'])
+        self.edge_id = int(edge_id)
+        self.from_node_id = int(from_node_id)
+        self.to_node_id = int(to_node_id)
 
         # The following parameters have default values
-        self.is_bidirectional = bool(param_dict.get('is_bidirectional', True))
-        self.capacity = int(param_dict.get('capacity', 1))
-        self.min_pass_time = int( param_dict.get('min_pass_time', 0) )
-        max_pass_time = param_dict.get('max_pass_time', None)
+        self.is_bidirectional = bool(is_bidirectional)
+        self.capacity = int(capacity)
+        self.min_pass_time = int(min_pass_time)
         if max_pass_time is None:
             # If there is no max_pass_time supplied, set it to be the same as min_pass_time
             self.max_pass_time = self.min_pass_time
@@ -72,6 +70,7 @@ class EDGE(object):
         #-------------------------------------#
         #-------------------------------#
 
+    #             (agent_id, task_id, is_activated, min_pass_stamp, max_pass_stamp)
     def put_agent(self, agent_id, task_id, is_activated=True, min_pass_stamp=0, max_pass_stamp=0):
         """
         Put a 'new' agent into the agent_dict

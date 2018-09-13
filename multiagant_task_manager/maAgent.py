@@ -13,6 +13,12 @@ class AGENT(object):
     """
     def __init__(self, agent_id, task_id=None, is_activated=True, min_pass_stamp=0, max_pass_stamp=None):
         """
+        inputs (* denote the "must-have"(mandatory) )
+        * agent_id
+        - task_id           (default: None)
+        - is_activated      (default: True)
+        - min_pass_stamp    (default: 0 sec., type: int)
+        - max_pass_stamp    (default: None, the same as min_pass_time)
         """
         # Properties of the agent
         #--------------------------------------#
@@ -36,6 +42,10 @@ class AGENT(object):
             else:
                 self.max_pass_stamp = max_pass_stamp
             # self.max_pass_stamp = (max_pass_stamp if max_pass_stamp >= min_pass_stamp else min_pass_stamp)
+
+    def __str__(self):
+        ret = "(A#{AID}, T#{TID})".format(AID=self.agent_id, TID=(self.task_id if not self.task_id is None else "--") )
+        return ret
 
     def is_period_intersected(self, time_stamp_range):
         """
