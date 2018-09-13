@@ -1,6 +1,7 @@
 
 import maAgent as ag
 import maEdge as ed
+import maGraphEngines as ge
 
 
 # The class for geometry task graph
@@ -50,7 +51,7 @@ class GEOMETRY_TASK_GRAPH(object):
         Str_out = "adj_graph with <%d> nodes and <%d> edges\n" % (self.num_nodes, self.num_edges)
         Str_out += "-------------------------------------------------\n"
         for i in range(self.num_nodes):
-            Str_out += ( (self.node_id_name_list[i]) if is_showing_by_node_name else ("#%d" % i) )
+            Str_out += ( (self.node_id_name_list[i] + "(%d)" % i) if is_showing_by_node_name else ("#%d" % i) )
             Str_out += ":\t"
             for node_id, edge_id in self.adj_graph[i]:
                 Str_out += ( (self.node_id_name_list[node_id]) if is_showing_by_node_name else str(node_id) )
