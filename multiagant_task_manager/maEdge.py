@@ -5,13 +5,13 @@ import maAgent as ag
 class EDGE(object):
     """
     Properties (static)
-        - edge_id: The id of this edge
-        - from_node_id: The id of the node that this edge begin from
-        - to_node_id: The id of the node that this edge point to
-        - is_bidirectional: If this edge is bi-directional
-        - capacity: The maximum number of agent to travel the edge at the same time
-        - min_pass_time: estimated minimum required time period for passing the edge
-        - max_pass_time: estimated maximum required time period for passing the edge
+        - edge_id (int): The id of this edge
+        - from_node_id (int): The id of the node that this edge begin from
+        - to_node_id (int): The id of the node that this edge point to
+        - is_bidirectional (bool): If this edge is bi-directional
+        - capacity (int): The maximum number of agent to travel the edge at the same time
+        - min_pass_time (int): estimated minimum required time period for passing the edge
+        - max_pass_time (int): estimated maximum required time period for passing the edge
                          (should not be smaller than min_pass_time)
 
     States (dynamically changed)
@@ -27,7 +27,7 @@ class EDGE(object):
         * to_node_id
         - is_bidirectional  (default: True)
         - capacity          (default: 1 unit)
-        - min_pass_time     (default: 0 sec.)
+        - min_pass_time     (default: 0 sec., type: int)
         - max_pass_time     (default: None, the same as min_pass_time)
         """
         # Properties of the edge
@@ -35,24 +35,26 @@ class EDGE(object):
         # The following parameters are mandatory
         # ** Important: If these parameters are not provided,
         #               the program will crash directly (intentionally).
-        self.edge_id = param_dict['edge_id']
-        self.from_node_id = param_dict['from_node_id']
-        self.to_node_id = param_dict['to_node_id']
+        self.edge_id = int(param_dict['edge_id'])
+        self.from_node_id = int(param_dict['from_node_id'])
+        self.to_node_id = int(param_dict['to_node_id'])
 
         # The following parameters have default values
-        self.is_bidirectional = param_dict.get('is_bidirectional', True)
-        self.capacity = param_dict.get('capacity', 1)
-        self.min_pass_time = param_dict.get('min_pass_time', 0)
+        self.is_bidirectional = bool(param_dict.get('is_bidirectional', True))
+        self.capacity = int(param_dict.get('capacity', 1))
+        self.min_pass_time = int( param_dict.get('min_pass_time', 0) )
         max_pass_time = param_dict.get('max_pass_time', None)
         if max_pass_time is None:
             # If there is no max_pass_time supplied, set it to be the same as min_pass_time
-            self.max_pass_time = min_pass_time
-        elif max_pass_time < min_pass_time:
-            # We don't allow the max_pass_time to be smaller than the min_pass_time
-            self.max_pass_time = min_pass_time
-            print('WARN: The max_pass_time is smaller than min_pass_time at edge of (%d, %d)' % (self.from_node_id, self.to_node_id))
+            self.max_pass_time = self.min_pass_time
         else:
-            self.max_pass_time = max_pass_time
+            max_pass_time = int(max_pass_time)
+            if max_pass_time < self.min_pass_time:
+                # We don't allow the max_pass_time to be smaller than the min_pass_time
+                self.max_pass_time = self.min_pass_time
+                print('WARN: The max_pass_time is smaller than min_pass_time at edge of (%d, %d)' % (self.from_node_id, self.to_node_id))
+            else:
+                self.max_pass_time = max_pass_time
         #--------------------------------------#
 
         # States of the edge
