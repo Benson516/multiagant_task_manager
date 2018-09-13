@@ -32,16 +32,18 @@ class EDGE(object):
         """
         # Properties of the edge
         #--------------------------------------#
-        # TODO: add some exception handling for excerpting parameters
         # The following parameters are mandatory
+        # ** Important: If these parameters are not provided,
+        #               the program will crash directly (intentionally).
         self.edge_id = param_dict['edge_id']
         self.from_node_id = param_dict['from_node_id']
         self.to_node_id = param_dict['to_node_id']
+
         # The following parameters have default values
-        self.is_bidirectional = param_dict['is_bidirectional']
-        self.capacity = param_dict['capacity']
-        self.min_pass_time = param_dict['min_pass_time']
-        max_pass_time = param_dict['max_pass_time']
+        self.is_bidirectional = param_dict.get('is_bidirectional', True)
+        self.capacity = param_dict.get('capacity', 1)
+        self.min_pass_time = param_dict.get('min_pass_time', 0)
+        max_pass_time = param_dict.get('max_pass_time', None)
         if max_pass_time is None:
             # If there is no max_pass_time supplied, set it to be the same as min_pass_time
             self.max_pass_time = min_pass_time
@@ -75,7 +77,7 @@ class EDGE(object):
             - True/False
         """
         if agent_id in self.agent_dict:
-            print('WARN: The agent with agent_id:<%d> already exist, skip this requirement on put_agent()' % agent_id)
+            print('WARN: The agent with agent_id:<%d> already exist, skip this requirement on put_agent() at edge<%d>' % (agent_id, self.edge_id))
             return False
         else:
             if is_activated:
@@ -132,55 +134,55 @@ class EDGE(object):
         """
         This method activates the specified agent
         """
-        if not agent_id in self.agent_dict:
+        if agent_id in self.agent_dict:
+            if self.agent_dict[agent_id].is_activated:
+                # The agent is already activated, do nothing
+                print('WARN: The agent <%d> is already activated at edge <%d>.' % (agent_id, self.edge_id))
+                return True
+            else:
+                if self.remained_capacity_now <= 0:
+                    # Something wrong, no room left for this agent to be activated!!
+                    print('WARN: No room left for the agent in the edge<%d>. The agent <%d> was not activated.' % self.edge_id)
+                    return False
+                else:
+                    self.agent_dict[agent_id].is_activated = True
+                    self.num_activated_agent += 1
+                    self.remained_capacity_now -= 1
+                    return True
+        else:
             # Something wrong
             # Something wrong, agent was not in the dict
             print('ERROR: The agent <%d> is not in the agent_dict at edge <%d>.' % (agent_id, self.edge_id))
             return False
-        # else
-        if self.agent_dict[agent_id].is_activated:
-            # The agent is already activated, do nothing
-            print('WARN: The agent <%d> is already activated at edge <%d>.' % (agent_id, self.edge_id))
-            return True
-        else:
-            if self.remained_capacity_now <= 0:
-                # Something wrong, no room left for this agent to be activated!!
-                print('WARN: No room left for the agent in the edge<%d>. The agent <%d> was not activated.' % self.edge_id)
-                return False
-            else:
-                self.agent_dict[agent_id].is_activated = True
-                self.num_activated_agent += 1
-                self.remained_capacity_now -= 1
-                return True
 
     def deactivate_agent(self, agent_id):
         """
         This method deactivates the specified agent
         """
-        if not agent_id in self.agent_dict:
+        if agent_id in self.agent_dict:
+            if not self.agent_dict[agent_id].is_activated:
+                # The agent is already non-activated, do nothing
+                print('WARN: The agent <%d> is already non-activated at edge <%d>.' % (agent_id, self.edge_id))
+                return True
+            else:
+                self.agent_dict[agent_id].is_activated = False
+                self.num_activated_agent -= 1
+                self.remained_capacity_now += 1
+                # Check for numbers
+                if self.num_activated_agent < 0:
+                    # Something wrong, remained_capacity_now is too high!!
+                    print('ERROR: num_activated_agent < 0 in the edge<%d>.' % self.edge_id)
+                    self.num_activated_agent = 0
+                if self.remained_capacity_now > self.capacity:
+                    # Something wrong, remained_capacity_now is too high!!
+                    print('ERROR: remained_capacity_now > capacity in the edge<%d>.' % self.edge_id)
+                    self.remained_capacity_now = self.capacity
+                return True
+        else:
             # Something wrong
             # Something wrong, agent was not in the dict
             print('ERROR: The agent <%d> is not in the agent_dict at edge <%d>.' % (agent_id, self.edge_id))
             return False
-        # else
-        if not self.agent_dict[agent_id].is_activated:
-            # The agent is already non-activated, do nothing
-            print('WARN: The agent <%d> is already non-activated at edge <%d>.' % (agent_id, self.edge_id))
-            return True
-        else:
-            self.agent_dict[agent_id].is_activated = False
-            self.num_activated_agent -= 1
-            self.remained_capacity_now += 1
-            # Check for numbers
-            if self.num_activated_agent < 0:
-                # Something wrong, remained_capacity_now is too high!!
-                print('ERROR: num_activated_agent < 0 in the edge<%d>.' % self.edge_id)
-                self.num_activated_agent = 0
-            if self.remained_capacity_now > self.capacity:
-                # Something wrong, remained_capacity_now is too high!!
-                print('ERROR: remained_capacity_now > capacity in the edge<%d>.' % self.edge_id)
-                self.remained_capacity_now = self.capacity
-            return True
 
     def sync_agent_dict(self):
         """
@@ -195,6 +197,7 @@ class EDGE(object):
         self.remained_capacity_now = self.capacity - self.num_activated_agent # self.num_agent_now + self.remained_capacity_now = self.capacity
         if self.remained_capacity_now < 0:
             print('ERROR: The remained_capacity_now < 0 after removal of an agent at edge <%d>' % self.edge_id)
+            self.remained_capacity_now = 0
             return False
         else:
             return True
