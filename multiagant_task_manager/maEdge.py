@@ -255,4 +255,10 @@ class EDGE(object):
         time_stamp_range = (time_stamp_range_start[0], (time_stamp_range_start[1] + self.max_pass_time) )
         return self.is_time_period_available(self, time_stamp_range, only_count_activated_agent=False)
 
+    def get_time_stamp_range_after_passage(self, time_stamp_range_start):
+        """
+        Utility function for calculating the time stamps after passage the edge,
+        given time zone from start
+        """
+        return ( (time_stamp_range_start[0] + self.min_pass_time), (time_stamp_range_start[1] + self.max_pass_time) )
 #-------------------------------#

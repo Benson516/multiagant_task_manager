@@ -48,7 +48,7 @@ class GEOMETRY_TASK_GRAPH(object):
         """
         This function print or return a beautiful layout of self.adj_graph by string.
         """
-        Str_out = "adj_graph with <%d> nodes and <%d> edges\n" % (self.num_nodes, self.num_edges)
+        Str_out = "\nadj_graph with <%d> nodes and <%d> edges\n" % (self.num_nodes, self.num_edges)
         Str_out += "-------------------------------------------------\n"
         for i in range(self.num_nodes):
             Str_out += ( (self.node_id_name_list[i] + "(%d)" % i) if is_showing_by_node_name else ("#%d" % i) )
@@ -67,7 +67,7 @@ class GEOMETRY_TASK_GRAPH(object):
         """
         This function print or return a beautiful layout of self.edge_list by string.
         """
-        Str_out = "edge_list with <%d> edges\n" % self.num_edges
+        Str_out = "\nedge_list with <%d> edges\n" % self.num_edges
         Str_out += "---------------------------------------------------------------------------------------\n"
         for i in range(self.num_edges):
             _E = self.edge_list[i]
@@ -168,3 +168,27 @@ class GEOMETRY_TASK_GRAPH(object):
             return False
         #
         return self.add_one_edge_by_node_id(from_node_id, to_node_id, is_bidirectional, capacity, min_pass_time, max_pass_time)
+
+    # Agent operations
+    #---------------------------------------#
+    def _remove_agent_from_all_edges(self, agent_id, task_id=None):
+        """
+        Remove an agent from all edges with specified/non-specified task_id.
+        """
+        if task_id is None:
+            for edge in self.edge_list:
+                if edge.is_agent_in_edge(agent_id):
+                    # No-matter what task it is
+                    print('INFO: Remove the agent <%d> with task <%d> from edge <%d>.' % (agent_id, edge.agent_dict[agent_id].task_id, edge.edge_id))
+                    edge.remove_agent(agent_id)
+            #
+        else:
+            for edge in self.edge_list:
+                if edge.is_agent_in_edge(agent_id):
+                    if edge.agent_dict[agent_id].task_id == task_id:
+                        print('INFO: Remove the agent <%d> with task <%d> from edge <%d>.' % (agent_id, edge.agent_dict[agent_id].task_id, edge.edge_id))
+                        edge.remove_agent(agent_id)
+            #
+        return True
+        
+    #---------------------------------------#

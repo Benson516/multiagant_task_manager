@@ -61,6 +61,10 @@ def Explore_cc_capcity(nid, adj, edges, visited, cc, CCnum):
 def reachability(x, y, adj, edges=None, count_capacity=True):
     """
     Finding the reachiability from node_id:x to node_id:y
+
+    Important: This method only consider the current
+               (a specific time instant) topological state.
+
     """
     visited = [False for _ in range(len(adj))]
     if count_capacity:
@@ -74,6 +78,10 @@ def reachability(x, y, adj, edges=None, count_capacity=True):
 def number_of_connected_components(adj, edges=None, count_capacity=True):
     """
     Find the total number of connected components
+
+    Important: This method only consider the current
+               (a specific time instant) topological state.
+               
     """
     visited = [False for _ in range(len(adj))]
     CCnum =   [0 for _ in range(len(adj))]
