@@ -1,7 +1,6 @@
 
-import maEdge as ed
 import maAgent as ag
-import maEdgeState as edState
+import maEdge as ed
 
 
 # The class for geometry task graph
@@ -22,8 +21,7 @@ class GEOMETRY_TASK_GRAPH(object):
         self.node_id_name_list = [] # Layout: [['name1','name2'], ['name3'], ...]
         self.node_name_id_dict = dict() # Layout: {'name1':0, 'name2':0, 'name3':1, ...}
         # Edges, indexed by the edge_id recorded in adj_graph
-        self.edge_list = [] # Static, elements are ed.EDGE()
-        self.edge_state = [] # Dynamically changed, elements are edState.EDGE_STATE()
+        self.edge_state = [] # Dynamically changed, elements are ed.EDGE()
 
     def _is_edge_in_adj_graph(self, from_node_id, to_node_id):
         """
@@ -43,19 +41,21 @@ class GEOMETRY_TASK_GRAPH(object):
         """
         pass
 
-    def add_one_edge_by_node_id(self, from_node_id, to_node_id, is_bidirectional=True, capacity=1, min_pass_time=1.0, max_pass_time=None):
+    def add_one_edge_by_node_id(self, param_dict):
         """
         inputs
-            - from which node (id)
-            - to which node (id)
-            - Bidirectional?
-            - capacity
-            - min_pass_time: estimated minimum required time period for passing the edge
-            - max_pass_time: estimated maximum required time period for passing the edge
+            param_dict includes: (* denote the "must-have"(mandatory) )
+            * edge_id
+            * from_node_id
+            * to_node_id
+            - is_bidirectional  (default: True)
+            - capacity          (default: 1 unit)
+            - min_pass_time     (default: 0 sec.)
+            - max_pass_time     (default: None, the same as min_pass_time)
         outputs
             - True/False
         """
-        edge_id = len(self.edge_list) # Append to the end of the edge_list
+        edge_id = len(self.edge_state) # Append to the end of the edge_state
         if self._is_edge_in_adj_graph(from_node_id, to_node_id)
             print('WARN: The edge (%d, %d) already exist, no new edge created.' % (from_node_id, to_node_id))
             return False
@@ -66,19 +66,20 @@ class GEOMETRY_TASK_GRAPH(object):
         else:
             adj[from_node_id].append((to_node_id, edge_id))
         # Edges
-        self.edge_list.append( ed.EDGE(edge_id, from_node_id, to_node_id, is_bidirectional, capacity, min_pass_time, max_pass_time) )
-        self.edge_state.append( edState.EDGE_STATE(edge_id, capacity) )
+        self.edge_state.append( ed.EDGE(param_dict) )
         return True
 
-    def add_one_edge_by_node_name(self, from_node_name, to_node_name, is_bidirectional=True, capacity=1, min_pass_time=1.0, max_pass_time=None):
+    def add_one_edge_by_node_name(self, param_dict):
         """
         inputs
-            - from which node (name)
-            - to which node (name)
-            - Bidirectional?
-            - capacity
-            - min_pass_time: estimated minimum required time period for passing the edge
-            - max_pass_time: estimated maximum required time period for passing the edge
+            param_dict includes: (* denote the "must-have"(mandatory) )
+            * edge_id
+            * from_node_id
+            * to_node_id
+            - is_bidirectional  (default: True)
+            - capacity          (default: 1 unit)
+            - min_pass_time     (default: 0 sec.)
+            - max_pass_time     (default: None, the same as min_pass_time)
         outputs
             - True/False
         """
