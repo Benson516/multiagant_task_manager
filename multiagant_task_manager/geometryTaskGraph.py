@@ -21,7 +21,7 @@ class GEOMETRY_TASK_GRAPH(object):
         self.node_id_name_list = [] # Layout: [['name1','name2'], ['name3'], ...]
         self.node_name_id_dict = dict() # Layout: {'name1':0, 'name2':0, 'name3':1, ...}
         # Edges, indexed by the edge_id recorded in adj_graph
-        self.edge_state = [] # Dynamically changed, elements are ed.EDGE()
+        self.edge_list = [] # Dynamically changed, elements are ed.EDGE()
 
     def _is_edge_in_adj_graph(self, from_node_id, to_node_id):
         """
@@ -55,7 +55,7 @@ class GEOMETRY_TASK_GRAPH(object):
         outputs
             - True/False
         """
-        edge_id = len(self.edge_state) # Append to the end of the edge_state
+        edge_id = len(self.edge_list) # Append to the end of the edge_state
         if self._is_edge_in_adj_graph(from_node_id, to_node_id)
             print('WARN: The edge (%d, %d) already exist, no new edge created.' % (from_node_id, to_node_id))
             return False
@@ -66,7 +66,7 @@ class GEOMETRY_TASK_GRAPH(object):
         else:
             adj[from_node_id].append((to_node_id, edge_id))
         # Edges
-        self.edge_state.append( ed.EDGE(param_dict) )
+        self.edge_list.append( ed.EDGE(param_dict) )
         return True
 
     def add_one_edge_by_node_name(self, param_dict):
