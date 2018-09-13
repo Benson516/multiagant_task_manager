@@ -232,4 +232,27 @@ class EDGE(object):
         """
         # Go through all the agent, no matter the current one or future one
         return (0 < self.get_remained_capacity_at_specific_time_period(time_stamp_range, only_count_activated_agent) )
+
+    def is_possible_to_pass(self, time_stamp_range_start, only_count_activated_agent=False):
+        """
+        Given the time range that the agent might possibly begin to pass the edge,
+        check if it is "safe" (conservatively) to pass the edge
+        with guaranteed enough remained capacity
+
+        Note: This method is different from the self.is_time_period_available()
+              in that this function consider the passage motion of the agent,
+              which require time. And, also, it's not allow that the edge become
+              full during passage.
+
+        inputs
+            - time_stamp_range_start: a tuple of (min_pass_stamp, max_pass_stamp)
+            - only_count_activated_agent: required to only count the currently activated (running) agents
+        outputs
+            - True: edge is available "starting" for the time period required
+              False: edge is occupied "starting" at the time period required
+        """
+        # Calculate the proper time zone that this agent occupied when passing this edge
+        time_stamp_range = (time_stamp_range_start[0], (time_stamp_range_start[1] + self.max_pass_time) )
+        return self.is_time_period_available(self, time_stamp_range, only_count_activated_agent=False)
+
 #-------------------------------#
