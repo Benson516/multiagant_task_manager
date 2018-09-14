@@ -111,10 +111,11 @@ class EDGE(object):
                 if self.num_activated_agent < 0:
                     self.num_activated_agent = 0
                     print('ERROR: The num_activated_agent < 0 after removal of an agent at edge <%d>.' % self.edge_id)
-            self.remained_capacity_now += 1
-            if self.remained_capacity_now > self.capacity:
-                self.remained_capacity_now = self.capacity
-                print('ERROR: The remained_capacity_now is greater than the capacity after removal of an agent at edge <%d>.' % self.edge_id)
+                #
+                self.remained_capacity_now += 1
+                if self.remained_capacity_now > self.capacity:
+                    self.remained_capacity_now = self.capacity
+                    print('ERROR: The remained_capacity_now is greater than the capacity after removal of an agent at edge <%d>.' % self.edge_id)
             #
             # Delet the agent from dict
             del self.agent_dict[agent_id]
@@ -192,8 +193,8 @@ class EDGE(object):
             - True/False
         """
         num_activated_agent = 0
-        for agent in self.agent_dict:
-            num_activated_agent += (1 if agent.is_activated else 0)
+        for agent_id in self.agent_dict:
+            num_activated_agent += (1 if self.agent_dict[agent_id].is_activated else 0)
         self.num_activated_agent = num_activated_agent
         self.remained_capacity_now = self.capacity - self.num_activated_agent # self.num_agent_now + self.remained_capacity_now = self.capacity
         if self.remained_capacity_now < 0:
@@ -214,10 +215,10 @@ class EDGE(object):
         """
         # Go through all the agent, no matter the current one or future one
         agent_count = 0
-        for agent in self.agent_dict:
-            if only_count_activated_agent and (not agent.is_activated):
+        for agent_id in self.agent_dict:
+            if only_count_activated_agent and (not self.agent_dict[agent_id].is_activated):
                 continue # Pass this non-activated agent
-            agent_count += (1 if agent.is_period_intersected(time_stamp_range) else 0)
+            agent_count += (1 if self.agent_dict[agent_id].is_period_intersected(time_stamp_range) else 0)
         return (self.capacity - agent_count)
 
     def is_time_period_available(self, time_stamp_range, only_count_activated_agent=False):
@@ -253,7 +254,7 @@ class EDGE(object):
         """
         # Calculate the proper time zone that this agent occupied when passing this edge
         time_stamp_range = (time_stamp_range_start[0], (time_stamp_range_start[1] + self.max_pass_time) )
-        return self.is_time_period_available(self, time_stamp_range, only_count_activated_agent=False)
+        return self.is_time_period_available(time_stamp_range, only_count_activated_agent)
 
     def get_time_stamp_range_after_passage(self, time_stamp_range_start):
         """

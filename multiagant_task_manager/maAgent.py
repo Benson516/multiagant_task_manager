@@ -44,7 +44,7 @@ class AGENT(object):
             # self.max_pass_stamp = (max_pass_stamp if max_pass_stamp >= min_pass_stamp else min_pass_stamp)
 
     def __str__(self):
-        ret = "(A#{AID}, T#{TID})".format(AID=self.agent_id, TID=(self.task_id if not self.task_id is None else "--") )
+        ret = "({ACTI}A#{AID}, T#{TID})".format(AID=self.agent_id, TID=(self.task_id if not self.task_id is None else "--"), ACTI=("o" if self.is_activated else "x" ) )
         return ret
 
     def is_period_intersected(self, time_stamp_range):

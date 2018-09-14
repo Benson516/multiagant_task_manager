@@ -101,7 +101,7 @@ class GEOMETRY_TASK_GRAPH(object):
         """
         if node_name in self.node_name_id_dict:
             # The node name already exist
-            print('The node name <%s>' % node_name)
+            print('ERROR: The node name <%s> is already exist, the node is not added.' % node_name)
             return False
         else:
             node_id = len(self.node_id_name_list)
@@ -190,5 +190,5 @@ class GEOMETRY_TASK_GRAPH(object):
                         edge.remove_agent(agent_id)
             #
         return True
-        
+
     #---------------------------------------#
