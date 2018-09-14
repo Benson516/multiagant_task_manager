@@ -71,7 +71,7 @@ class EDGE(object):
         #-------------------------------#
 
     #             (agent_id, task_id, is_activated, min_pass_stamp, max_pass_stamp)
-    def put_agent(self, agent_id, task_id, is_activated=True, min_pass_stamp=0, max_pass_stamp=0):
+    def put_agent(self, agent_id, task_id=None, is_activated=True, min_pass_stamp=0, max_pass_stamp=None):
         """
         Put a 'new' agent into the agent_dict
         outputs
@@ -86,7 +86,7 @@ class EDGE(object):
                     self.num_activated_agent += 1
                     self.remained_capacity_now -= 1
                     self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, min_pass_stamp, max_pass_stamp)
-                    print('INFO: An activated agent is put into the edge<%d>, activated/total = %d/%d' % (self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
+                    print('INFO: An activated agent <%d> with task <%s> is put into the edge<%d>, activated/total = %d/%d' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
                     return True
                 else:
                     # Something wrong, no room left for this activated agent!!
@@ -95,7 +95,7 @@ class EDGE(object):
             else:
                 # Nothing, just put this non-activated agent in
                 self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, min_pass_stamp, max_pass_stamp)
-                print('INFO: A non-activated agent is put into the edge<%d>, activated/total = %d/%d' % (self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
+                print('INFO: A non-activated agent <%d> with task <%s> is put into the edge <%d>, activated/total = %d/%d.' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
                 return True
 
     def remove_agent(self, agent_id):
@@ -118,7 +118,9 @@ class EDGE(object):
                     print('ERROR: The remained_capacity_now is greater than the capacity after removal of an agent at edge <%d>.' % self.edge_id)
             #
             # Delet the agent from dict
+            task_id = self.agent_dict[agent_id].task_id
             del self.agent_dict[agent_id]
+            print('INFO: Agent <%d> with task <%s> was removed from edge <%d>. Then, activated/total becomes %d/%d.' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
             #
             return True # No matter what, the agent has been removed.
         else:
@@ -255,6 +257,13 @@ class EDGE(object):
         # Calculate the proper time zone that this agent occupied when passing this edge
         time_stamp_range = (time_stamp_range_start[0], (time_stamp_range_start[1] + self.max_pass_time) )
         return self.is_time_period_available(time_stamp_range, only_count_activated_agent)
+
+    def get_time_stamp_range_occupying_edge(self, time_stamp_range_start):
+        """
+        Utility function for calculating the maximum time-zone stamps during the edge,
+        given time zone from start
+        """
+        return ( time_stamp_range_start[0], (time_stamp_range_start[1] + self.max_pass_time) )
 
     def get_time_stamp_range_after_passage(self, time_stamp_range_start):
         """

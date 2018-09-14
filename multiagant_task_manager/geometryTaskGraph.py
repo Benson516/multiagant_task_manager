@@ -44,6 +44,37 @@ class GEOMETRY_TASK_GRAPH(object):
         #
         return False
 
+    def _get_edge_list_from_path(self, path):
+        """
+        This utility method help finding the edge list from a given path.
+        inputs
+            - path: a sequence of node_id
+
+        outputs
+            - path_edges/None: a sequence of edges that the path pass through,
+                               "None" means that the path has some non-exist edges.
+        """
+        path_edges = []
+        for i in range(len(path)-1):
+            from_node_id = path[i]
+            to_node_id = path[i+1]
+            if not self._is_edge_in_adj_graph(from_node_id, to_node_id, check_dual_direction=True):
+                print("ERROR: The edge (%d --> %d) is not in the given path" % (from_node_id, to_node_id) )
+                return None
+            edge_id = None
+            for nid, eid in self.adj_graph[from_node_id]:
+                if nid == to_node_id:
+                    edge_id = eid
+                    break
+            if edge_id is None:
+                # Something wrong
+                print("ERROR: The edge (%d --> %d) is not in the given path" % (from_node_id, to_node_id) )
+                return None
+            # Found edge_id
+            path_edges.append(edge_id)
+        return path_edges
+
+
     def print_adj_graph(self, is_printing=True, is_showing_by_node_name=True):
         """
         This function print or return a beautiful layout of self.adj_graph by string.
@@ -93,6 +124,23 @@ class GEOMETRY_TASK_GRAPH(object):
             print(Str_out)
         return Str_out
 
+    def print_path(self, path, is_printing=True, is_showing_by_node_name=True):
+        """
+        This function print or return a the path by string.
+        """
+        if not is_showing_by_node_name:
+            Str_out = "path = %s" % str(path)
+        else:
+            Str_out = "path = ["
+            for i in range(len(path)):
+                Str_out += self.node_id_name_list[path[i]]
+                Str_out += (", " if i < (len(path)-1) else "")
+            Str_out += "]"
+        # Print out
+        if is_printing:
+            print(Str_out)
+        return Str_out
+
     def add_one_node_by_name(self, node_name):
         """
         The node_id should be unique.
@@ -112,6 +160,7 @@ class GEOMETRY_TASK_GRAPH(object):
             self.adj_graph.append([])
             # Increase the counter
             self.num_nodes += 1
+
     #                                 (from_node_id, to_node_id, is_bidirectional, capacity, min_pass_time, max_pass_time)
     def add_one_edge_by_node_id(self, from_node_id, to_node_id, is_bidirectional=True, capacity=1, min_pass_time=0, max_pass_time=None):
         """
@@ -175,20 +224,97 @@ class GEOMETRY_TASK_GRAPH(object):
         """
         Remove an agent from all edges with specified/non-specified task_id.
         """
-        if task_id is None:
-            for edge in self.edge_list:
-                if edge.is_agent_in_edge(agent_id):
-                    # No-matter what task it is
-                    print('INFO: Remove the agent <%d> with task <%d> from edge <%d>.' % (agent_id, edge.agent_dict[agent_id].task_id, edge.edge_id))
+        for edge in self.edge_list:
+            if edge.is_agent_in_edge(agent_id):
+                if (task_id is None) or (self.edge_list[edge_id].agent_dict[agent_id].task_id == task_id):
+                    # print('INFO: Remove the agent <%d> with task <%d> from edge <%d>.' % (agent_id, edge.agent_dict[agent_id].task_id, edge.edge_id))
                     edge.remove_agent(agent_id)
-            #
-        else:
-            for edge in self.edge_list:
-                if edge.is_agent_in_edge(agent_id):
-                    if edge.agent_dict[agent_id].task_id == task_id:
-                        print('INFO: Remove the agent <%d> with task <%d> from edge <%d>.' % (agent_id, edge.agent_dict[agent_id].task_id, edge.edge_id))
-                        edge.remove_agent(agent_id)
-            #
+        #
         return True
 
+    def _remove_agent_by_path(self, path, agent_id, task_id=None):
+        """
+        Remove an agent according to a list of node "path"
+        with specified/non-specified task_id.
+        """
+        path_edge = self._get_edge_list_from_path(path)
+        if path_edge is None:
+            return False
+        # Else
+        for edge_id in path_edge:
+            # Remove agent
+            if self.edge_list[edge_id].is_agent_in_edge(agent_id):
+                if (task_id is None) or (self.edge_list[edge_id].agent_dict[agent_id].task_id == task_id):
+                    # print('INFO: Remove agent <%d> with task <%s> from edge <%d>.' % (agent_id, str(self.edge_list[edge_id].agent_dict[agent_id].task_id), self.edge_list[edge_id].edge_id))
+                    self.edge_list[edge_id].remove_agent(agent_id)
+        #
+        return True
+
+    def _add_agent_by_path(self, path, T_zone_start, agent_id, task_id=None, is_activated=True):
+        """
+        Add an agent according to a list of node "path"
+        with specified/non-specified task_id.
+        inputs
+            - T_zone_start = (T_min, T_max)
+        outputs
+            - True/False
+        """
+        path_edge = self._get_edge_list_from_path(path)
+        if path_edge is None:
+            return False
+        # Else
+        T_zone_tmp = T_zone_start
+        T_zone_occ = T_zone_start
+        for edge_id in path_edge:
+            # Add agent
+            T_zone_occ = self.edge_list[edge_id].get_time_stamp_range_occupying_edge(T_zone_tmp)
+            T_zone_tmp = self.edge_list[edge_id].get_time_stamp_range_after_passage(T_zone_tmp)
+            self.edge_list[edge_id].put_agent(agent_id, task_id, is_activated, T_zone_occ[0], T_zone_occ[1])
+            # print('INFO: Add agent <%d> with task <%s> from edge <%d>.' % (agent_id, str(self.edge_list[edge_id].agent_dict[agent_id].task_id), self.edge_list[edge_id].edge_id))
+            # Note that we have to print this after adding agent
+        return True
+    #---------------------------------------#
+
+    # Traversal methods
+    #---------------------------------------#
+    def qrarry_path_exist(self, T_zone_start, start_id, end_id, top_priority_for_activated_agent=False):
+        """
+        This method ues dijkstra alogorithm to find out the best path
+        or find out that there is no path at all.
+
+        inputs
+            - T_zone_start = (T_min, T_max)
+            - start_id
+            - end_id
+            - top_priority_for_activated_agent
+
+        outputs
+            - True/False
+        """
+        return ( not (ge.dijkstras(self.adj_graph, self.edge_list, T_zone_start, start_id, end_id, top_priority_for_activated_agent) is None) )
+
+    def book_a_path(self, T_zone_start, start_id, end_id, agent_id, task_id=None):
+        """
+        This method ues dijkstra alogorithm to find out the best path
+        or find out that there is no path at all.
+
+        inputs
+            - T_zone_start = (T_min, T_max)
+            - start_id
+            - end_id
+            - top_priority_for_activated_agent
+
+        outputs
+            - path/None: a sequence (list) of node_id from start_id to end_id
+                         or "None" means no valid path
+        """
+        # Note that top_priority_for_activated_agent is set to False
+        path = ge.dijkstras(self.adj_graph, self.edge_list, T_zone_start, start_id, end_id, False)
+        if path is None:
+            # Non-reachable
+            return None
+        # Else
+        # Note that the activation of the agent is set to False
+        self._add_agent_by_path(path, T_zone_start, agent_id, task_id, False)
+        return path
     #---------------------------------------#
