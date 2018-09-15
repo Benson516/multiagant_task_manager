@@ -358,6 +358,7 @@ class GEOMETRY_TASK_GRAPH(object):
             - path/None: a sequence (list) of node_id from start_id to end_id
                          or "None" means no valid path
             - list of (node_id, agent_list) that obstruct the path (may be some agents idle/stop/waiting at those places)
+            - T_zone_total: Total occupation time (stamp) for this path, from start to end
         """
         # Note that top_priority_for_activated_agent is set to False
         path = ge.dijkstras(self.adj_graph, self.edge_list, T_zone_start, start_id, end_id, False)
@@ -365,12 +366,13 @@ class GEOMETRY_TASK_GRAPH(object):
             # Non-reachable
             return None
         # TODO: Check if any node on the path is occupied by "other" agents!! (maybe it's no need to check the start node?)
-        # TODO: return the path and the list of (node_id, agent_list) pairs for post process
+        # TODO: return the path, list of (node_id, agent_list) pairs for post process, T_zone_total with "None"
         # TODO: If there were any node occupied, don't book the path!
 
         # Else
         # Note that the activation of the agent is set to False
         self._add_agent_by_path(path, T_zone_start, agent_id, task_id, False)
         # TODO: retrun a variable indicating that there is no node being occupied by agent.
+        # TODO: return T_zone_total
         return path
     #---------------------------------------#
