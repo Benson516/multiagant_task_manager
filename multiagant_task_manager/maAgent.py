@@ -1,4 +1,6 @@
 
+# TODO: Modify the min_pass_stamp and max_pass_stamp to be a tuple such as T_zone_stamp
+# TODO: Add data structure (dictionary - container_name:task_id) and operation method for agent
 
 # The structure for agent
 #-------------------------------#

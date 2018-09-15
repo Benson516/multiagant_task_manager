@@ -1,6 +1,6 @@
 import maAgent as ag
 
-# The class for dege and its states
+# The class for edge and its states
 #-------------------------------#
 class EDGE(object):
     """

@@ -1,6 +1,7 @@
 
 import maAgent as ag
 import maEdge as ed
+import maNode as nd # TODO: Implement this class
 import maGraphEngines as ge
 
 
@@ -20,6 +21,7 @@ class GEOMETRY_TASK_GRAPH(object):
         # For searching and inverse searching between node id and the node "name"
         # Note that id and "name" are one to one
         # One node_id have only one "name"
+        # TODO: Advanced the following self.node_id_name_list to a complete self.node_list which can store states of nodes.
         self.node_id_name_list = [] # Layout: ['name1','name2','name3', ...]
         self.node_name_id_dict = dict() # Layout: {'name1':0, 'name2':1, 'name3':2, ...}
         # Edges, indexed by the edge_id recorded in adj_graph
@@ -124,6 +126,13 @@ class GEOMETRY_TASK_GRAPH(object):
             print(Str_out)
         return Str_out
 
+    def print_node_list(self, is_printing=True, is_showing_by_node_name=True):
+        """
+        This function print or return a beautiful layout of self.node_list by string.
+        """
+        # TODO: Implement this function.
+        pass
+
     def print_path(self, path, is_printing=True, is_showing_by_node_name=True):
         """
         This function print or return a the path by string.
@@ -141,6 +150,8 @@ class GEOMETRY_TASK_GRAPH(object):
             print(Str_out)
         return Str_out
 
+    # Insertion
+    #-----------------------------------------#
     def add_one_node_by_name(self, node_name):
         """
         The node_id should be unique.
@@ -217,6 +228,8 @@ class GEOMETRY_TASK_GRAPH(object):
             return False
         #
         return self.add_one_edge_by_node_id(from_node_id, to_node_id, is_bidirectional, capacity, min_pass_time, max_pass_time)
+    #-----------------------------------------#
+
 
     # Agent operations
     #---------------------------------------#
@@ -232,11 +245,23 @@ class GEOMETRY_TASK_GRAPH(object):
         #
         return True
 
+    def _remove_agent_from_all_nodes(self, agent_id, task_id=None):
+        """
+        Remove an agent from all nodes with specified/non-specified task_id.
+        """
+        # TODO: Implement this function.
+        #
+        return True
+
     def _remove_agent_by_path(self, path, agent_id, task_id=None):
         """
         Remove an agent according to a list of node "path"
         with specified/non-specified task_id.
         """
+        # Remove from nodes
+        # TODO: Remove from nodes on path, too!
+
+        # Remove from edges
         path_edge = self._get_edge_list_from_path(path)
         if path_edge is None:
             return False
@@ -259,6 +284,10 @@ class GEOMETRY_TASK_GRAPH(object):
         outputs
             - True/False
         """
+        # Add to nodes
+        # TODO: Add to nodes on path, too!
+
+        # Add to edges
         path_edge = self._get_edge_list_from_path(path)
         if path_edge is None:
             return False
@@ -291,6 +320,7 @@ class GEOMETRY_TASK_GRAPH(object):
         outputs
             - True/False
         """
+        # TODO: Decide if also need to check the nodes on path??
         return ( not (ge.dijkstras(self.adj_graph, self.edge_list, T_zone_start, start_id, end_id, top_priority_for_activated_agent) is None) )
 
     def book_a_path(self, T_zone_start, start_id, end_id, agent_id, task_id=None):
@@ -307,14 +337,20 @@ class GEOMETRY_TASK_GRAPH(object):
         outputs
             - path/None: a sequence (list) of node_id from start_id to end_id
                          or "None" means no valid path
+            - list of (node_id, agent_list) that obstruct the path (may be some agents idle/stop/waiting at those places)
         """
         # Note that top_priority_for_activated_agent is set to False
         path = ge.dijkstras(self.adj_graph, self.edge_list, T_zone_start, start_id, end_id, False)
         if path is None:
             # Non-reachable
             return None
+        # TODO: Check if any node on the path is occupied.
+        # TODO: return the path and the list of (node_id, agent_list) pairs for post process
+        # TODO: If there were any node occupied, don't book the path!
+
         # Else
         # Note that the activation of the agent is set to False
         self._add_agent_by_path(path, T_zone_start, agent_id, task_id, False)
+        # TODO: retrun a variable indicating that there is no node being occupied by agent.
         return path
     #---------------------------------------#
