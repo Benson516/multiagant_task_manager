@@ -112,7 +112,7 @@ class GEOMETRY_TASK_GRAPH(object):
             Str_out += from_node_str + (" <--> " if _E.is_bidirectional else "  --> ")
             Str_out += to_node_str + ",\t"
             Str_out += "cap=%d, " % _E.capacity
-            Str_out += "pTime=(%d, %d), " % (_E.min_pass_time, _E.max_pass_time)
+            Str_out += "pTime=" + str(_E.duration) + ", "
             Str_out += "#ag=%d, " % _E.num_activated_agent
             Str_out += "reCap=%d, " % _E.remained_capacity_now
             Str_out += "agents={"
@@ -172,16 +172,17 @@ class GEOMETRY_TASK_GRAPH(object):
             # Increase the counter
             self.num_nodes += 1
 
-    #                                 (from_node_id, to_node_id, is_bidirectional, capacity, min_pass_time, max_pass_time)
-    def add_one_edge_by_node_id(self, from_node_id, to_node_id, is_bidirectional=True, capacity=1, min_pass_time=0, max_pass_time=None):
+    #                                 (from_node_id, to_node_id, is_bidirectional, capacity, duration)
+    def add_one_edge_by_node_id(self, from_node_id, to_node_id, is_bidirectional=True, capacity=1, duration=(0, None)):
         """
         inputs (* denote the "must-have"(mandatory) )
             * from_node_id
             * to_node_id
-            - is_bidirectional  (default: True)
-            - capacity          (default: 1 unit)
-            - min_pass_time     (default: 0 sec.)
-            - max_pass_time     (default: None, the same as min_pass_time)
+            - is_bidirectional      (default: True)
+            - capacity              (default: 1 unit)
+            - duration = (min_pass_time, max_pass_time)
+                - min_pass_time     (default: 0 sec.)
+                - max_pass_time     (default: None, the same as min_pass_time)
         outputs
             - True/False
         """
@@ -202,21 +203,22 @@ class GEOMETRY_TASK_GRAPH(object):
         else:
             self.adj_graph[from_node_id].append((to_node_id, edge_id))
         # Edges
-        self.edge_list.append( ed.EDGE(edge_id, from_node_id, to_node_id, is_bidirectional, capacity, min_pass_time, max_pass_time) )
+        self.edge_list.append( ed.EDGE(edge_id, from_node_id, to_node_id, is_bidirectional, capacity, duration) )
         # Increase the counter
         self.num_edges += 1
         return True
 
-    #                                 (from_node_name, to_node_name, is_bidirectional, capacity, min_pass_time, max_pass_time)
-    def add_one_edge_by_node_name(self, from_node_name, to_node_name, is_bidirectional=True, capacity=1, min_pass_time=0, max_pass_time=None):
+    #                                 (from_node_name, to_node_name, is_bidirectional, capacity, duration)
+    def add_one_edge_by_node_name(self, from_node_name, to_node_name, is_bidirectional=True, capacity=1, duration=(0, None)):
         """
         inputs (* denote the "must-have"(mandatory) )
             * from_node_name
             * to_node_name
-            - is_bidirectional  (default: True)
-            - capacity          (default: 1 unit)
-            - min_pass_time     (default: 0 sec.)
-            - max_pass_time     (default: None, the same as min_pass_time)
+            - is_bidirectional      (default: True)
+            - capacity              (default: 1 unit)
+            - duration = (min_pass_time, max_pass_time)
+                - min_pass_time     (default: 0 sec.)
+                - max_pass_time     (default: None, the same as min_pass_time)
         outputs
             - True/False
         """
@@ -227,7 +229,7 @@ class GEOMETRY_TASK_GRAPH(object):
             print('WARN: At least one of the node name (%s, %s) does not exist, no new edge created.' % (from_node_name, to_node_name))
             return False
         #
-        return self.add_one_edge_by_node_id(from_node_id, to_node_id, is_bidirectional, capacity, min_pass_time, max_pass_time)
+        return self.add_one_edge_by_node_id(from_node_id, to_node_id, is_bidirectional, capacity, duration)
     #-----------------------------------------#
 
 

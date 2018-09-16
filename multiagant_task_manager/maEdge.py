@@ -10,17 +10,18 @@ class EDGE(object):
         - to_node_id (int): The id of the node that this edge point to
         - is_bidirectional (bool): If this edge is bi-directional
         - capacity (int): The maximum number of agent to travel the edge at the same time
-        - min_pass_time (int): estimated minimum required time period for passing the edge
-        - max_pass_time (int): estimated maximum required time period for passing the edge
-                         (should not be smaller than min_pass_time)
+        - duration = (min_pass_time, max_pass_time)
+            - min_pass_time (int): estimated minimum required time period for passing the edge
+            - max_pass_time (int): estimated maximum required time period for passing the edge
+                                  (should not be smaller than min_pass_time)
 
     States (dynamically changed)
         - agent_dict: dictionary of agent that map from agent_id to ag.AGENT() object
         - num_activated_agent: The agent that marked is_activated=True
         - remained_capacity_now: This equals to (capacity - num_activated_agent)
     """
-    #       EDGE(edge_id, from_node_id, to_node_id, is_bidirectional, capacity, min_pass_time, max_pass_time)
-    def __init__(self, edge_id, from_node_id, to_node_id, is_bidirectional=True, capacity=1, min_pass_time=0, max_pass_time=None):
+    #       EDGE(edge_id, from_node_id, to_node_id, is_bidirectional, capacity, duration)
+    def __init__(self, edge_id, from_node_id, to_node_id, is_bidirectional=True, capacity=1, duration=(0,None)):
         """
         inputs (* denote the "must-have"(mandatory) )
         * edge_id
@@ -28,8 +29,7 @@ class EDGE(object):
         * to_node_id
         - is_bidirectional  (default: True)
         - capacity          (default: 1 unit)
-        - min_pass_time     (default: 0 sec., type: int)
-        - max_pass_time     (default: None, the same as min_pass_time)
+        - duration          (default: (0,None), type: int, None means the smae as min. dT)
         """
         # Properties of the edge
         #--------------------------------------#
@@ -41,18 +41,22 @@ class EDGE(object):
         # The following parameters have default values
         self.is_bidirectional = bool(is_bidirectional)
         self.capacity = int(capacity)
-        self.min_pass_time = int(min_pass_time)
+        #
+        min_pass_time, max_pass_time = duration
+        _min_dT = int(min_pass_time)
         if max_pass_time is None:
             # If there is no max_pass_time supplied, set it to be the same as min_pass_time
-            self.max_pass_time = self.min_pass_time
+            _max_dT = _min_dT
         else:
             max_pass_time = int(max_pass_time)
-            if max_pass_time < self.min_pass_time:
+            if max_pass_time < _min_dT:
                 # We don't allow the max_pass_time to be smaller than the min_pass_time
-                self.max_pass_time = self.min_pass_time
+                _max_dT = _min_dT
                 print('WARN: The max_pass_time is smaller than min_pass_time at edge of (%d, %d)' % (self.from_node_id, self.to_node_id))
             else:
-                self.max_pass_time = max_pass_time
+                _max_dT = max_pass_time
+        #
+        self.duration = (_min_dT, _max_dT)
         #--------------------------------------#
 
         # States of the edge
@@ -255,7 +259,7 @@ class EDGE(object):
               False: edge is occupied "starting" at the time period required
         """
         # Calculate the proper time zone that this agent occupied when passing this edge
-        # T_zone_occ = (T_zone_start[0], (T_zone_start[1] + self.max_pass_time) )
+        # T_zone_occ = (T_zone_start[0], (T_zone_start[1] + self.duration[1]) )
         T_zone_occ = self.get_time_stamp_range_occupying_edge(T_zone_start)
         return self.is_available_for_T_zone(T_zone_occ, only_count_activated_agent)
 
@@ -264,12 +268,12 @@ class EDGE(object):
         Utility function for calculating the maximum time-zone stamps during the edge,
         given time zone from start
         """
-        return ( T_zone_start[0], (T_zone_start[1] + self.max_pass_time) )
+        return ( T_zone_start[0], (T_zone_start[1] + self.duration[1]) )
 
     def get_time_stamp_range_after_passage(self, T_zone_start):
         """
         Utility function for calculating the time stamps after passage the edge,
         given time zone from start
         """
-        return ( (T_zone_start[0] + self.min_pass_time), (T_zone_start[1] + self.max_pass_time) )
+        return ( (T_zone_start[0] + self.duration[0]), (T_zone_start[1] + self.duration[1]) )
 #-------------------------------#
