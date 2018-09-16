@@ -43,20 +43,20 @@ class EDGE(object):
         self.capacity = int(capacity)
         #
         min_pass_time, max_pass_time = duration
-        _min_dT = int(min_pass_time)
+        dT_min = int(min_pass_time)
         if max_pass_time is None:
             # If there is no max_pass_time supplied, set it to be the same as min_pass_time
-            _max_dT = _min_dT
+            dT_max = dT_min
         else:
             max_pass_time = int(max_pass_time)
-            if max_pass_time < _min_dT:
+            if max_pass_time < dT_min:
                 # We don't allow the max_pass_time to be smaller than the min_pass_time
-                _max_dT = _min_dT
+                dT_max = dT_min
                 print('WARN: The max_pass_time is smaller than min_pass_time at edge of (%d, %d)' % (self.from_node_id, self.to_node_id))
             else:
-                _max_dT = max_pass_time
+                dT_max = max_pass_time
         #
-        self.duration = (_min_dT, _max_dT)
+        self.duration = (dT_min, dT_max)
         #--------------------------------------#
 
         # States of the edge
@@ -89,7 +89,7 @@ class EDGE(object):
                 if self.remained_capacity_now > 0:
                     self.num_activated_agent += 1
                     self.remained_capacity_now -= 1
-                    self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, T_zone[0], T_zone[1])
+                    self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, T_zone)
                     print('INFO: An activated agent <%d> with task <%s> is put into the edge<%d>, activated/total = %d/%d' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
                     return True
                 else:
@@ -98,7 +98,7 @@ class EDGE(object):
                     return False
             else:
                 # Nothing, just put this non-activated agent in
-                self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, T_zone[0], T_zone[1])
+                self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, T_zone)
                 print('INFO: A non-activated agent <%d> with task <%s> is put into the edge <%d>, activated/total = %d/%d.' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
                 return True
 
