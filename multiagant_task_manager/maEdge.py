@@ -71,7 +71,7 @@ class EDGE(object):
         #-------------------------------#
 
     #             (agent_id, task_id, is_activated, min_pass_stamp, max_pass_stamp)
-    def put_agent(self, agent_id, task_id=None, is_activated=True, min_pass_stamp=0, max_pass_stamp=None):
+    def put_agent(self, agent_id, task_id=None, is_activated=True, T_zone=(0,None)):
         """
         Put a 'new' agent into the agent_dict
         outputs
@@ -85,7 +85,7 @@ class EDGE(object):
                 if self.remained_capacity_now > 0:
                     self.num_activated_agent += 1
                     self.remained_capacity_now -= 1
-                    self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, min_pass_stamp, max_pass_stamp)
+                    self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, T_zone[0], T_zone[1])
                     print('INFO: An activated agent <%d> with task <%s> is put into the edge<%d>, activated/total = %d/%d' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
                     return True
                 else:
@@ -94,7 +94,7 @@ class EDGE(object):
                     return False
             else:
                 # Nothing, just put this non-activated agent in
-                self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, min_pass_stamp, max_pass_stamp)
+                self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, T_zone[0], T_zone[1])
                 print('INFO: A non-activated agent <%d> with task <%s> is put into the edge <%d>, activated/total = %d/%d.' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
                 return True
 
@@ -206,11 +206,11 @@ class EDGE(object):
         else:
             return True
 
-    def get_remained_capacity_at_specific_time_period(self, time_stamp_range, only_count_activated_agent=False):
+    def get_remained_capacity_for_T_zone(self, T_zone_occ, only_count_activated_agent=False):
         """
         Get the remained capacity of the edge at given time period (unix stamp)
         inputs
-            - time_stamp_range: a tuple of (min_pass_stamp, max_pass_stamp)
+            - T_zone_occ: a tuple of (min_pass_stamp, max_pass_stamp)
             - only_count_activated_agent: required to only count the currently activated (running) agents
         outputs
             - The remained capacity at specific time zone
@@ -220,55 +220,56 @@ class EDGE(object):
         for agent_id in self.agent_dict:
             if only_count_activated_agent and (not self.agent_dict[agent_id].is_activated):
                 continue # Pass this non-activated agent
-            agent_count += (1 if self.agent_dict[agent_id].is_period_intersected(time_stamp_range) else 0)
+            agent_count += (1 if self.agent_dict[agent_id].is_period_intersected(T_zone_occ) else 0)
         return (self.capacity - agent_count)
 
-    def is_time_period_available(self, time_stamp_range, only_count_activated_agent=False):
+    def is_available_for_T_zone(self, T_zone_occ, only_count_activated_agent=False):
         """
         Check if the edge is available at given time period (unix stamp)
         inputs
-            - time_stamp_range: a tuple of (min_pass_stamp, max_pass_stamp)
+            - T_zone_occ: a tuple of (min_pass_stamp, max_pass_stamp)
             - only_count_activated_agent: required to only count the currently activated (running) agents
         outputs
             - True: edge is available for the time period required
               False: edge is occupied at the time period required
         """
         # Go through all the agent, no matter the current one or future one
-        return (0 < self.get_remained_capacity_at_specific_time_period(time_stamp_range, only_count_activated_agent) )
+        return (0 < self.get_remained_capacity_for_T_zone(T_zone_occ, only_count_activated_agent) )
 
-    def is_possible_to_pass(self, time_stamp_range_start, only_count_activated_agent=False):
+    def is_possible_to_pass(self, T_zone_start, only_count_activated_agent=False):
         """
         Given the time range that the agent might possibly begin to pass the edge,
         check if it is "safe" (conservatively) to pass the edge
         with guaranteed enough remained capacity
 
-        Note: This method is different from the self.is_time_period_available()
+        Note: This method is different from the self.is_available_for_T_zone()
               in that this function consider the passage motion of the agent,
               which require time. And, also, it's not allow that the edge become
               full during passage.
 
         inputs
-            - time_stamp_range_start: a tuple of (min_pass_stamp, max_pass_stamp)
+            - T_zone_start: a tuple of (min_pass_stamp, max_pass_stamp)
             - only_count_activated_agent: required to only count the currently activated (running) agents
         outputs
             - True: edge is available "starting" for the time period required
               False: edge is occupied "starting" at the time period required
         """
         # Calculate the proper time zone that this agent occupied when passing this edge
-        time_stamp_range = (time_stamp_range_start[0], (time_stamp_range_start[1] + self.max_pass_time) )
-        return self.is_time_period_available(time_stamp_range, only_count_activated_agent)
+        # T_zone_occ = (T_zone_start[0], (T_zone_start[1] + self.max_pass_time) )
+        T_zone_occ = self.get_time_stamp_range_occupying_edge(T_zone_start)
+        return self.is_available_for_T_zone(T_zone_occ, only_count_activated_agent)
 
-    def get_time_stamp_range_occupying_edge(self, time_stamp_range_start):
+    def get_time_stamp_range_occupying_edge(self, T_zone_start):
         """
         Utility function for calculating the maximum time-zone stamps during the edge,
         given time zone from start
         """
-        return ( time_stamp_range_start[0], (time_stamp_range_start[1] + self.max_pass_time) )
+        return ( T_zone_start[0], (T_zone_start[1] + self.max_pass_time) )
 
-    def get_time_stamp_range_after_passage(self, time_stamp_range_start):
+    def get_time_stamp_range_after_passage(self, T_zone_start):
         """
         Utility function for calculating the time stamps after passage the edge,
         given time zone from start
         """
-        return ( (time_stamp_range_start[0] + self.min_pass_time), (time_stamp_range_start[1] + self.max_pass_time) )
+        return ( (T_zone_start[0] + self.min_pass_time), (T_zone_start[1] + self.max_pass_time) )
 #-------------------------------#

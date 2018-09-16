@@ -49,20 +49,20 @@ class AGENT(object):
         ret = "({ACTI}A#{AID}, T#{TID}), tz({TMIN},{TMAX})".format(AID=self.agent_id, TID=(self.task_id if not self.task_id is None else "--"), ACTI=("o" if self.is_activated else "x" ), TMIN=self.min_pass_stamp, TMAX=self.max_pass_stamp )
         return ret
 
-    def is_period_intersected(self, time_stamp_range):
+    def is_period_intersected(self, T_zone):
         """
-        This method help check if the time_stamp_range is intersected with
+        This method help check if the T_zone is intersected with
         the occupied time period of this agent in this task.
 
         Because the time period is defined to be a closed set,
         the coiincident boundary points are considered to be interseted.
 
         input
-            - time_stamp_range: a tuple of (min_pass_stamp, max_pass_stamp)
+            - T_zone: a tuple of (min_pass_stamp, max_pass_stamp)
         output
             - True/False
         """
-        if time_stamp_range[1] < time_stamp_range[0]:
-            print('WARN: the max_pass_stamp is smaller than min_pass_stamp in time_stamp_range.')
-        return (time_stamp_range[1] >= self.min_pass_stamp) and (time_stamp_range[0] <= self.max_pass_stamp)
+        if T_zone[1] < T_zone[0]:
+            print('WARN: the max_pass_stamp is smaller than min_pass_stamp in T_zone.')
+        return (T_zone[1] >= self.min_pass_stamp) and (T_zone[0] <= self.max_pass_stamp)
 #-------------------------------#
