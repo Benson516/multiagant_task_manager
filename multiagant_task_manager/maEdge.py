@@ -248,32 +248,83 @@ class EDGE(object):
 
         Note: This method is different from the self.is_available_for_T_zone()
               in that this function consider the passage motion of the agent,
-              which require time. And, also, it's not allow that the edge become
+              which requires time. And, also, it's not allow that the edge become
               full during passage.
 
         inputs
             - T_zone_start: a tuple of (min_pass_stamp, max_pass_stamp)
             - only_count_activated_agent: required to only count the currently activated (running) agents
         outputs
-            - True: edge is available "starting" for the time period required
-              False: edge is occupied "starting" at the time period required
+            - True: edge is available "starting" from the time period required
+              False: edge is occupied "starting" from the time period required
         """
         # Calculate the proper time zone that this agent occupied when passing this edge
-        # T_zone_occ = (T_zone_start[0], (T_zone_start[1] + self.duration[1]) )
-        T_zone_occ = self.get_time_stamp_range_occupying_edge(T_zone_start)
+        T_zone_occ = self.get_T_zone_occ_from_start(T_zone_start)
         return self.is_available_for_T_zone(T_zone_occ, only_count_activated_agent)
 
-    def get_time_stamp_range_occupying_edge(self, T_zone_start):
+    def is_possible_to_pass_backtrack(self, T_zone_end, only_count_activated_agent=False):
+        """
+        Given the time range that the agent might possibly begin to "inversely" pass the edge,
+        check if it is "safe" (conservatively) to pass the edge
+        with guaranteed enough remained capacity
+
+        Note: This method is different from the self.is_available_for_T_zone()
+              in that this function consider the passage motion of the agent,
+              which requires time. And, also, it's not allow that the edge become
+              full during passage.
+
+        inputs
+            - T_zone_end: a tuple of (min_pass_stamp, max_pass_stamp)
+            - only_count_activated_agent: required to only count the currently activated (running) agents
+        outputs
+            - True: edge is available "ending" at the time period required
+              False: edge is occupied "ending" at the time period required
+        """
+        # Calculate the proper time zone that this agent occupied when passing this edge
+        T_zone_occ = self.get_T_zone_occ_from_end(T_zone_end)
+        return self.is_available_for_T_zone(T_zone_occ, only_count_activated_agent)
+
+    def get_T_zone_occ_from_start(self, T_zone_start):
         """
         Utility function for calculating the maximum time-zone stamps during the edge,
         given time zone from start
+        inputs
+            - T_zone_start
+        outputs
+            - T_zone_occ
         """
         return ( T_zone_start[0], (T_zone_start[1] + self.duration[1]) )
 
-    def get_time_stamp_range_after_passage(self, T_zone_start):
+    def get_T_zone_occ_from_end(self, T_zone_end):
+        """
+        Utility function for calculating the maximum time-zone stamps during the edge,
+        given time zone from end
+        inputs
+            - T_zone_end
+        outputs
+            - T_zone_occ
+        """
+        return ( (T_zone_end[0] - self.duration[0]), T_zone_end[1] )
+
+    def get_T_zone_end_from_start(self, T_zone_start):
         """
         Utility function for calculating the time stamps after passage the edge,
         given time zone from start
+        inputs
+            - T_zone_start
+        outputs
+            - T_zone_end
         """
         return ( (T_zone_start[0] + self.duration[0]), (T_zone_start[1] + self.duration[1]) )
+
+    def get_T_zone_start_from_end(self, T_zone_end):
+        """
+        Utility function for calculating the time stamps before passage the edge,
+        given time zone from end
+        inputs
+            - T_zone_end
+        outputs
+            - T_zone_start
+        """
+        return ( (T_zone_end[0] - self.duration[0]), (T_zone_end[1] - self.duration[1]) )
 #-------------------------------#

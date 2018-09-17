@@ -314,8 +314,8 @@ class GEOMETRY_TASK_GRAPH(object):
         T_zone_occ = T_zone_start
         for edge_id in path_edge:
             # Add agent
-            T_zone_occ = self.edge_list[edge_id].get_time_stamp_range_occupying_edge(T_zone_tmp)
-            T_zone_tmp = self.edge_list[edge_id].get_time_stamp_range_after_passage(T_zone_tmp)
+            T_zone_occ = self.edge_list[edge_id].get_T_zone_occ_from_start(T_zone_tmp)
+            T_zone_tmp = self.edge_list[edge_id].get_T_zone_end_from_start(T_zone_tmp)
             self.edge_list[edge_id].put_agent(agent_id, task_id, is_activated, T_zone_occ)
             # print('INFO: Add agent <%d> with task <%s> from edge <%d>.' % (agent_id, str(self.edge_list[edge_id].agent_dict[agent_id].task_id), self.edge_list[edge_id].edge_id))
             # Note that we have to print this after adding agent

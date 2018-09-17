@@ -183,7 +183,7 @@ def dijkstras(adj, edges, T_zone_start, start_id, end_id, top_priority_for_activ
                 pass
             else:
                 if edges[eid].is_possible_to_pass(T_zone_nodes[nid_u], only_count_activated_agent):
-                    T_v_tmp = edges[eid].get_time_stamp_range_after_passage(T_zone_nodes[nid_u])
+                    T_v_tmp = edges[eid].get_T_zone_end_from_start(T_zone_nodes[nid_u])
                     # Relax
                     if dist[nid_v] > T_v_tmp[id_opt_target]:
                         # print("T_v_tmp = " + str(T_v_tmp))
