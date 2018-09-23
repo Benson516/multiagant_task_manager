@@ -115,7 +115,6 @@ class GEOMETRY_TASK_GRAPH(object):
             Str_out += "cap=%d, " % _E.capacity
             Str_out += "pTime=" + str(_E.duration) + ", "
             Str_out += "#ag=%d, " % _E.num_activated_agent
-            Str_out += "reCap=%d, " % _E.remained_capacity_now
             Str_out += "agents={"
             for agent_id in _E.agent_dict:
                 Str_out += str(_E.agent_dict[agent_id]) + ", "

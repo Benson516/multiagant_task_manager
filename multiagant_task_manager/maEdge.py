@@ -18,7 +18,6 @@ class EDGE(object):
     States (dynamically changed)
         - agent_dict: dictionary of agent that map from agent_id to ag.AGENT() object
         - num_activated_agent: The agent that marked is_activated=True
-        - remained_capacity_now: This equals to (capacity - num_activated_agent)
     """
     #       EDGE(edge_id, from_node_id, to_node_id, is_bidirectional, capacity, duration)
     def __init__(self, edge_id, from_node_id, to_node_id, is_bidirectional=True, capacity=1, duration=(0,None)):
@@ -69,9 +68,6 @@ class EDGE(object):
         #-------------------------------------#
         # The total number of activated agent
         self.num_activated_agent = 0 # current running agent
-        # The current/activated remained capacity of this edge
-        # TODO: remove the "remained_capacity_now"
-        self.remained_capacity_now = self.capacity - self.num_activated_agent # self.num_agent_now + self.remained_capacity_now = self.capacity
         #-------------------------------------#
         #-------------------------------#
 
@@ -87,15 +83,14 @@ class EDGE(object):
             return False
         else:
             if is_activated:
-                if self.remained_capacity_now > 0:
+                if self.is_available_for_T_zone(T_zone, only_count_activated_agent=False):
                     self.num_activated_agent += 1
-                    self.remained_capacity_now -= 1
                     self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, T_zone)
                     print('INFO: An activated agent <%d> with task <%s> is put into the edge<%d>, activated/total = %d/%d' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
                     return True
                 else:
                     # Something wrong, no room left for this activated agent!!
-                    print('ERROR: No room left for an activated agent in the edge<%d>. The agent <%d> was not added.' % (self.edge_id,agent_id) )
+                    print('ERROR: No room left for an activated agent in the edge<%d> within T_zone=%s. The agent <%d> was not added.' % (self.edge_id, agent_id, str(T_zone) ) )
                     return False
             else:
                 # Nothing, just put this non-activated agent in
@@ -117,10 +112,6 @@ class EDGE(object):
                     self.num_activated_agent = 0
                     print('ERROR: The num_activated_agent < 0 after removal of an agent at edge <%d>.' % self.edge_id)
                 #
-                self.remained_capacity_now += 1
-                if self.remained_capacity_now > self.capacity:
-                    self.remained_capacity_now = self.capacity
-                    print('ERROR: The remained_capacity_now is greater than the capacity after removal of an agent at edge <%d>.' % self.edge_id)
             #
             # Delet the agent from dict
             task_id = self.agent_dict[agent_id].task_id
@@ -149,15 +140,9 @@ class EDGE(object):
                 print('WARN: The agent <%d> is already activated at edge <%d>.' % (agent_id, self.edge_id))
                 return True
             else:
-                if self.remained_capacity_now <= 0:
-                    # Something wrong, no room left for this agent to be activated!!
-                    print('WARN: No room left for the agent in the edge<%d>. The agent <%d> was not activated.' % self.edge_id)
-                    return False
-                else:
-                    self.agent_dict[agent_id].is_activated = True
-                    self.num_activated_agent += 1
-                    self.remained_capacity_now -= 1
-                    return True
+                self.agent_dict[agent_id].is_activated = True
+                self.num_activated_agent += 1
+                return True
         else:
             # Something wrong
             # Something wrong, agent was not in the dict
@@ -176,16 +161,11 @@ class EDGE(object):
             else:
                 self.agent_dict[agent_id].is_activated = False
                 self.num_activated_agent -= 1
-                self.remained_capacity_now += 1
                 # Check for numbers
                 if self.num_activated_agent < 0:
-                    # Something wrong, remained_capacity_now is too high!!
+                    # Something wrong, num_activated_agent < 0
                     print('ERROR: num_activated_agent < 0 in the edge<%d>.' % self.edge_id)
                     self.num_activated_agent = 0
-                if self.remained_capacity_now > self.capacity:
-                    # Something wrong, remained_capacity_now is too high!!
-                    print('ERROR: remained_capacity_now > capacity in the edge<%d>.' % self.edge_id)
-                    self.remained_capacity_now = self.capacity
                 return True
         else:
             # Something wrong
@@ -203,13 +183,7 @@ class EDGE(object):
         for agent_id in self.agent_dict:
             num_activated_agent += (1 if self.agent_dict[agent_id].is_activated else 0)
         self.num_activated_agent = num_activated_agent
-        self.remained_capacity_now = self.capacity - self.num_activated_agent # self.num_agent_now + self.remained_capacity_now = self.capacity
-        if self.remained_capacity_now < 0:
-            print('ERROR: The remained_capacity_now < 0 after removal of an agent at edge <%d>' % self.edge_id)
-            self.remained_capacity_now = 0
-            return False
-        else:
-            return True
+        return True
 
     def get_remained_capacity_for_T_zone(self, T_zone_occ, only_count_activated_agent=False):
         """

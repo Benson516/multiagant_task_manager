@@ -20,14 +20,14 @@ def Explore(nid, adj, visited):
     # the end
 
 # Kernel function for finding reachability
-def Explore_capacity(nid, adj, edges, visited):
+def Explore_capacity(nid, adj, edges, visited, T_zone, only_count_activated_agent=False):
     """
     Recursive function for depth-first search.
     """
     visited[nid] = True
     for to_nid, eid in adj[nid]:
-        if not visited[to_nid] and edges[eid].remained_capacity_now > 0:
-            Explore_capacity(to_nid, adj, edges, visited)
+        if not visited[to_nid] and edges[eid].is_available_for_T_zone(T_zone, only_count_activated_agent):
+            Explore_capacity(to_nid, adj, edges, visited, T_zone, only_count_activated_agent)
     # the end
 
 # Kernel function for finding connected components
@@ -43,15 +43,15 @@ def Explore_cc(nid, adj, visited, cc, CCnum):
     # the end
 
 # Kernel function for finding connected components
-def Explore_cc_capcity(nid, adj, edges, visited, cc, CCnum):
+def Explore_cc_capcity(nid, adj, edges, visited, cc, CCnum, T_zone, only_count_activated_agent=False):
     """
     Recursive function for depth-first search.
     """
     visited[nid] = True
     CCnum[nid] = cc
     for to_nid, eid in adj[nid]:
-        if not visited[to_nid] and edges[eid].remained_capacity_now > 0:
-            Explore_cc_capcity(to_nid, adj, edges, visited, cc, CCnum)
+        if not visited[to_nid] and edges[eid].is_available_for_T_zone(T_zone, only_count_activated_agent):
+            Explore_cc_capcity(to_nid, adj, edges, visited, cc, CCnum, T_zone, only_count_activated_agent)
     # the end
 
 
@@ -61,7 +61,7 @@ def Explore_cc_capcity(nid, adj, edges, visited, cc, CCnum):
 
 
 #------------------------------------------------#
-def reachability(x, y, adj, edges=None, count_capacity=True):
+def reachability(x, y, adj, edges=None, count_capacity=True, T_zone=(0,None), only_count_activated_agent=False):
     """
     Finding the reachiability from node_id:x to node_id:y
 
@@ -71,14 +71,14 @@ def reachability(x, y, adj, edges=None, count_capacity=True):
     """
     visited = [False for _ in range(len(adj))]
     if count_capacity:
-        Explore_capacity(x, adj, edges, visited)
+        Explore_capacity(x, adj, edges, visited, T_zone, only_count_activated_agent)
     else:
         # Simply traverse through the topology of graph,
-        # not counting remained_capacity_now of edges
+        # not counting capacity of edges
         Explore(x, adj, visited)
     return visited[y]
 
-def number_of_connected_components(adj, edges=None, count_capacity=True):
+def number_of_connected_components(adj, edges=None, count_capacity=True, T_zone=(0,None), only_count_activated_agent=False):
     """
     Find the total number of connected components
 
@@ -92,11 +92,11 @@ def number_of_connected_components(adj, edges=None, count_capacity=True):
     if count_capacity:
         for nid in range(len(adj)):
             if not visited[nid]:
-                Explore_cc_capcity(nid, adj, edges, visited, cc, CCnum)
+                Explore_cc_capcity(nid, adj, edges, visited, cc, CCnum, T_zone, only_count_activated_agent)
                 cc += 1
     else:
         # Simply traverse through the topology of graph,
-        # not counting remained_capacity_now of edges
+        # not counting capacity of edges
         for nid in range(len(adj)):
             if not visited[nid]:
                 Explore_cc(nid, adj, visited, cc, CCnum)
@@ -178,26 +178,22 @@ def dijkstras(adj, edges, T_zone_start, start_id, end_id, top_priority_for_activ
         for nid_v, eid in adj[nid_u]:
             # Check if the edge is "valid"
             # nid_u --eid--> nid_v
-            if top_priority_for_activated_agent and (edges[eid].remained_capacity_now <= 0):
-                # The edge is "invalid", try another one.
-                pass
-            else:
-                if edges[eid].is_possible_to_pass(T_zone_nodes[nid_u], only_count_activated_agent):
-                    T_v_tmp = edges[eid].get_T_zone_end_from_start(T_zone_nodes[nid_u])
-                    # Relax
-                    if dist[nid_v] > T_v_tmp[id_opt_target]:
-                        # print("T_v_tmp = " + str(T_v_tmp))
-                        dist[nid_v] = T_v_tmp[id_opt_target]
-                        T_zone_nodes[nid_v] = T_v_tmp # Update time_zone of the node
-                        prev[nid_v] = nid_u
-                        """
-                        print("update (u, v) = (%d, %d)" % (nid_u, nid_v))
-                        print("dist = " + str(dist))
-                        print("prev = " + str(prev))
-                        print("\n")
-                        """
-                        heap.put_nowait( (dist[nid_v], nid_v) )
-                #
+            if edges[eid].is_possible_to_pass(T_zone_nodes[nid_u], only_count_activated_agent):
+                T_v_tmp = edges[eid].get_T_zone_end_from_start(T_zone_nodes[nid_u])
+                # Relax
+                if dist[nid_v] > T_v_tmp[id_opt_target]:
+                    # print("T_v_tmp = " + str(T_v_tmp))
+                    dist[nid_v] = T_v_tmp[id_opt_target]
+                    T_zone_nodes[nid_v] = T_v_tmp # Update time_zone of the node
+                    prev[nid_v] = nid_u
+                    """
+                    print("update (u, v) = (%d, %d)" % (nid_u, nid_v))
+                    print("dist = " + str(dist))
+                    print("prev = " + str(prev))
+                    print("\n")
+                    """
+                    heap.put_nowait( (dist[nid_v], nid_v) )
+            #
         # end for
     # end while
 
