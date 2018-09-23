@@ -4,7 +4,7 @@ These function are graph engins apecifically for useing with
 the graph data structure defined by GEOMETRY_TASK_GRAPH
 and its following sub-class.
 """
-import Queue as Q
+import Queue
 # import sys
 
 
@@ -131,7 +131,7 @@ def dijkstras(adj, edges, T_zone_start, start_id, end_id, top_priority_for_activ
     only_count_activated_agent = top_priority_for_activated_agent
 
     # We minimize the T_max
-    id_opt_target = 1
+    id_opt_target = 1 # minimize the total duration_max
     max_value = float('inf') # sys.maxsize
 
 
@@ -147,11 +147,11 @@ def dijkstras(adj, edges, T_zone_start, start_id, end_id, top_priority_for_activ
     #-------------------------------#
 
     # dist[s] = 0 <-- acturally, minimum distance in graph, not actually need to be zero
-    dist[start_id] = T_zone_start[id_opt_target] # We count for the maximum time
+    dist[start_id] = 0 # Count for the duration, minimum or maximum (or maybe the difference??)
     T_zone_nodes[start_id] = T_zone_start
 
     # Make a min-heap
-    heap = Q.PriorityQueue()
+    heap = Queue.PriorityQueue()
     for u in range(num_nodes):
         heap.put_nowait( (dist[u], u) )
 
@@ -179,12 +179,12 @@ def dijkstras(adj, edges, T_zone_start, start_id, end_id, top_priority_for_activ
             # Check if the edge is "valid"
             # nid_u --eid--> nid_v
             if edges[eid].is_possible_to_pass(T_zone_nodes[nid_u], only_count_activated_agent):
-                T_v_tmp = edges[eid].get_T_zone_end_from_start(T_zone_nodes[nid_u])
                 # Relax
-                if dist[nid_v] > T_v_tmp[id_opt_target]:
-                    # print("T_v_tmp = " + str(T_v_tmp))
-                    dist[nid_v] = T_v_tmp[id_opt_target]
-                    T_zone_nodes[nid_v] = T_v_tmp # Update time_zone of the node
+                weight_uv = edges[eid].duration[id_opt_target] # Minimize the total duration with specified id_opt_target
+                # weight_uv = edges[eid].duration[1] - edges[eid].duration[0] # Minimoze the difference of duration_max and duration_min, for minimizing the uncertainties
+                if dist[nid_v] > (dist[nid_u] + weight_uv):
+                    dist[nid_v] = (dist[nid_u] + weight_uv)
+                    T_zone_nodes[nid_v] = edges[eid].get_T_zone_end_from_start(T_zone_nodes[nid_u]) # Update time_zone of the node
                     prev[nid_v] = nid_u
                     """
                     print("update (u, v) = (%d, %d)" % (nid_u, nid_v))
@@ -201,7 +201,6 @@ def dijkstras(adj, edges, T_zone_start, start_id, end_id, top_priority_for_activ
     for i in range(len(dist)):
         if dist[i] == max_value:
             dist[i] = None
-
     # test
     try:
         delta_T_max = dist[end_id] - dist[start_id]
@@ -216,7 +215,7 @@ def dijkstras(adj, edges, T_zone_start, start_id, end_id, top_priority_for_activ
     #
 
     # Generate the path
-    if dist[end_id] is None:
+    if (dist[end_id] is None) or (dist[end_id] == max_value):
         # The end_id is not reachable from start_id
         # in the sense of "valid" edge traversal
         print('INFO: The end_id is not reachable from start_id in the sense of "valid" edge traversal.')
