@@ -17,6 +17,7 @@ class GEOMETRY_TASK_GRAPH(object):
         # Adjacent graph, store a list of (to_node_id, edge_id) pair of a from_node_id
         # self.adj_graph = [[] for _ in range(self.num_nodes)]
         self.adj_graph = [] # Empty
+        self.adj_graph_reversed = [] # Empty
         # Nodes
         # For searching and inverse searching between node id and the node "name"
         # Note that id and "name" are one to one

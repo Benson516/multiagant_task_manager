@@ -70,6 +70,7 @@ class EDGE(object):
         # The total number of activated agent
         self.num_activated_agent = 0 # current running agent
         # The current/activated remained capacity of this edge
+        # TODO: remove the "remained_capacity_now"
         self.remained_capacity_now = self.capacity - self.num_activated_agent # self.num_agent_now + self.remained_capacity_now = self.capacity
         #-------------------------------------#
         #-------------------------------#
@@ -102,7 +103,7 @@ class EDGE(object):
                 print('INFO: A non-activated agent <%d> with task <%s> is put into the edge <%d>, activated/total = %d/%d.' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
                 return True
 
-    def remove_agent(self, agent_id):
+    def remove_agent(self, agent_id, task_id=None):
         """
         Remove the exist agent
         outputs
