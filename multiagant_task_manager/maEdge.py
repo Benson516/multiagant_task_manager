@@ -20,7 +20,7 @@ class EDGE(object):
         - num_activated_agent: The agent that marked is_activated=True
     """
     #       EDGE(edge_id, from_node_id, to_node_id, is_bidirectional, capacity, duration)
-    def __init__(self, edge_id, from_node_id, to_node_id, is_bidirectional=True, capacity=1, duration=(0,None)):
+    def __init__(self, edge_id, from_node_id, to_node_id, is_bidirectional=True, capacity=1, duration=(0,0)):
         """
         inputs (* denote the "must-have"(mandatory) )
         * edge_id
@@ -28,7 +28,7 @@ class EDGE(object):
         * to_node_id
         - is_bidirectional  (default: True)
         - capacity          (default: 1 unit)
-        - duration          (default: (0,None), type: int, None means the smae as min. dT)
+        - duration          (default: (0,0), type: int, None means infinity. dT)
         """
         # Properties of the edge
         #--------------------------------------#
@@ -45,7 +45,7 @@ class EDGE(object):
         dT_min = int(min_pass_time)
         if max_pass_time is None:
             # If there is no max_pass_time supplied, set it to be the same as min_pass_time
-            dT_max = dT_min
+            dT_max = float('inf') # 'None' means infinity (no maximum)
         else:
             max_pass_time = int(max_pass_time)
             if max_pass_time < dT_min:
@@ -64,7 +64,7 @@ class EDGE(object):
         self.agent_dict = dict() # Elements are {agent_id:ag.AGENT(), ...}
 
         # ** Important!! **
-        # The fllowing two number should be syncing with self.agent_dict
+        # The fllowing numbers should be syncing with self.agent_dict
         #-------------------------------------#
         # The total number of activated agent
         self.num_activated_agent = 0 # current running agent
@@ -72,7 +72,7 @@ class EDGE(object):
         #-------------------------------#
 
     #             (agent_id, task_id, is_activated, min_pass_stamp, max_pass_stamp)
-    def put_agent(self, agent_id, task_id=None, is_activated=True, T_zone=(0,None)):
+    def put_agent(self, agent_id, task_id=None, is_activated=False, T_zone=(0,None)):
         """
         Put a 'new' agent into the agent_dict
         outputs
@@ -82,21 +82,18 @@ class EDGE(object):
             print('WARN: The agent with agent_id:<%d> already exist, skip this requirement on put_agent() at edge<%d>' % (agent_id, self.edge_id))
             return False
         else:
-            if is_activated:
-                if self.is_available_for_T_zone(T_zone, only_count_activated_agent=False):
-                    self.num_activated_agent += 1
-                    self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, T_zone)
-                    print('INFO: An activated agent <%d> with task <%s> is put into the edge<%d>, activated/total = %d/%d' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
-                    return True
-                else:
-                    # Something wrong, no room left for this activated agent!!
-                    print('ERROR: No room left for an activated agent in the edge<%d> within T_zone=%s. The agent <%d> was not added.' % (self.edge_id, agent_id, str(T_zone) ) )
-                    return False
-            else:
-                # Nothing, just put this non-activated agent in
+            if self.is_available_for_T_zone(T_zone, only_count_activated_agent=False):
                 self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, T_zone)
-                print('INFO: A non-activated agent <%d> with task <%s> is put into the edge <%d>, activated/total = %d/%d.' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
+                if is_activated:
+                    self.num_activated_agent += 1
+                    print('INFO: An activated agent <%d> with task <%s> is put into the edge<%d>, activated/total = %d/%d' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
+                else:
+                    print('INFO: An non-activated agent <%d> with task <%s> is put into the edge<%d>, activated/total = %d/%d' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
                 return True
+            else:
+                # Something wrong, no room left for this activated agent!!
+                print('ERROR: No room left for an activated agent in the edge<%d> within T_zone=%s. The agent <%d> was not added.' % (self.edge_id, agent_id, str(T_zone) ) )
+                return False
 
     def remove_agent(self, agent_id, task_id=None):
         """
@@ -111,8 +108,6 @@ class EDGE(object):
                 if self.num_activated_agent < 0:
                     self.num_activated_agent = 0
                     print('ERROR: The num_activated_agent < 0 after removal of an agent at edge <%d>.' % self.edge_id)
-                #
-            #
             # Delet the agent from dict
             task_id = self.agent_dict[agent_id].task_id
             del self.agent_dict[agent_id]

@@ -14,15 +14,15 @@ class AGENT(object):
         - min_pass_stamp (int): estimated earliest time (unix stamp) for passing the edge
         - max_pass_stamp (int): estimated latest time (unix stamp) for passing the edge
     """
-    def __init__(self, agent_id, task_id=None, is_activated=True, T_zone=(0,None)):
+    def __init__(self, agent_id, task_id=None, is_activated=False, T_zone=(0,None)):
         """
         inputs (* denote the "must-have"(mandatory) )
         * agent_id
         - task_id           (default: None)
-        - is_activated      (default: True)
+        - is_activated      (default: False)
         - T_zone = (min_pass_stamp, max_pass_stamp)
             - min_pass_stamp    (default: 0 sec., type: int)
-            - max_pass_stamp    (default: None, the same as min_pass_time)
+            - max_pass_stamp    (default: None, infinity or eternal)
         """
         # Properties of the agent
         #--------------------------------------#
@@ -37,7 +37,7 @@ class AGENT(object):
         min_pass_stamp, max_pass_stamp = T_zone
         T_min = int(min_pass_stamp)
         if max_pass_stamp is None:
-            T_max = T_min
+            T_max = float('inf') # 'None' means infinity (no maximum)
         else:
             max_pass_stamp = int(max_pass_stamp)
             # If the max_pass_stamp is smaller than the min_pass_stamp
@@ -67,6 +67,9 @@ class AGENT(object):
         output
             - True/False
         """
+        if T_zone[1] is None:
+            # 'None' means infinity
+            return (T_zone[0] <= self.T_zone[1])
         if T_zone[1] < T_zone[0]:
             print('WARN: the max_pass_stamp is smaller than min_pass_stamp in T_zone.')
         return (T_zone[1] >= self.T_zone[0]) and (T_zone[0] <= self.T_zone[1])
