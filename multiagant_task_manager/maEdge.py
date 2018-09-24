@@ -71,104 +71,7 @@ class EDGE(object):
         #-------------------------------------#
         #-------------------------------#
 
-    #             (agent_id, task_id, is_activated, min_pass_stamp, max_pass_stamp)
-    def put_agent(self, agent_id, task_id=None, is_activated=False, T_zone=(0,None)):
-        """
-        Put a 'new' agent into the agent_dict
-        outputs
-            - True/False
-        """
-        if agent_id in self.agent_dict:
-            print('WARN: The agent with agent_id:<%d> already exist, skip this requirement on put_agent() at edge<%d>' % (agent_id, self.edge_id))
-            return False
-        else:
-            if self.is_available_for_T_zone(T_zone, only_count_activated_agent=False):
-                self.agent_dict[agent_id] = ag.AGENT(agent_id, task_id, is_activated, T_zone)
-                if is_activated:
-                    self.num_activated_agent += 1
-                    print('INFO: An activated agent <%d> with task <%s> is put into the edge<%d>, activated/total = %d/%d' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
-                else:
-                    print('INFO: An non-activated agent <%d> with task <%s> is put into the edge<%d>, activated/total = %d/%d' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
-                return True
-            else:
-                # Something wrong, no room left for this activated agent!!
-                print('ERROR: No room left for an activated agent in the edge<%d> within T_zone=%s. The agent <%d> was not added.' % (self.edge_id, agent_id, str(T_zone) ) )
-                return False
-
-    def remove_agent(self, agent_id, task_id=None):
-        """
-        Remove the exist agent
-        outputs
-            - True/False
-        """
-        if agent_id in self.agent_dict:
-            #
-            if self.agent_dict[agent_id].is_activated:
-                self.num_activated_agent -= 1
-                if self.num_activated_agent < 0:
-                    self.num_activated_agent = 0
-                    print('ERROR: The num_activated_agent < 0 after removal of an agent at edge <%d>.' % self.edge_id)
-            # Delet the agent from dict
-            task_id = self.agent_dict[agent_id].task_id
-            del self.agent_dict[agent_id]
-            print('INFO: Agent <%d> with task <%s> was removed from edge <%d>. Then, activated/total becomes %d/%d.' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
-            #
-            return True # No matter what, the agent has been removed.
-        else:
-            # Something wrong, agent was not in the dict
-            print('ERROR: The agent <%d> is not in the agent_dict at edge <%d>.' % (agent_id, self.edge_id))
-            return False
-
-    def is_agent_in_edge(self, agent_id):
-        """
-        This method check if the agent is in the agent_dict
-        """
-        return (agent_id in self.agent_dict)
-
-    def activate_agent(self, agent_id):
-        """
-        This method activates the specified agent
-        """
-        if agent_id in self.agent_dict:
-            if self.agent_dict[agent_id].is_activated:
-                # The agent is already activated, do nothing
-                print('WARN: The agent <%d> is already activated at edge <%d>.' % (agent_id, self.edge_id))
-                return True
-            else:
-                self.agent_dict[agent_id].is_activated = True
-                self.num_activated_agent += 1
-                return True
-        else:
-            # Something wrong
-            # Something wrong, agent was not in the dict
-            print('ERROR: The agent <%d> is not in the agent_dict at edge <%d>.' % (agent_id, self.edge_id))
-            return False
-
-    def deactivate_agent(self, agent_id):
-        """
-        This method deactivates the specified agent
-        """
-        if agent_id in self.agent_dict:
-            if not self.agent_dict[agent_id].is_activated:
-                # The agent is already non-activated, do nothing
-                print('WARN: The agent <%d> is already non-activated at edge <%d>.' % (agent_id, self.edge_id))
-                return True
-            else:
-                self.agent_dict[agent_id].is_activated = False
-                self.num_activated_agent -= 1
-                # Check for numbers
-                if self.num_activated_agent < 0:
-                    # Something wrong, num_activated_agent < 0
-                    print('ERROR: num_activated_agent < 0 in the edge<%d>.' % self.edge_id)
-                    self.num_activated_agent = 0
-                return True
-        else:
-            # Something wrong
-            # Something wrong, agent was not in the dict
-            print('ERROR: The agent <%d> is not in the agent_dict at edge <%d>.' % (agent_id, self.edge_id))
-            return False
-
-    def sync_agent_dict(self):
+    def _sync_agent_dict(self):
         """
         In case there might be counting error, re-sync the states of this object with agent_dict().
         outputs
@@ -180,37 +83,141 @@ class EDGE(object):
         self.num_activated_agent = num_activated_agent
         return True
 
-    def get_remained_capacity_for_T_zone(self, T_zone_occ, only_count_activated_agent=False):
+    #             (agent_id, task_id, is_activated, min_pass_stamp, max_pass_stamp)
+    def put_agent(self, agent_id, task_id, is_activated=False, T_zone=(0,None)):
+        """
+        Put a 'new' agent into the agent_dict
+        outputs
+            - True/False
+        """
+        if not agent_id in self.agent_dict:
+            self.agent_dict[agent_id] = ag.AGENT(agent_id)
+        # else
+        if self.is_available_for_T_zone(T_zone, only_count_activated_agent=False):
+            if self.agent_dict[agent_id].put_task(task_id, is_activated, T_zone):
+                if is_activated:
+                    self.num_activated_agent += 1
+                    print('INFO: An activated agent <%d> with task <%s> is put into the edge<%d>, activated/total = %d/%d' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
+                else:
+                    print('INFO: A non-activated agent <%d> with task <%s> is put into the edge<%d>, activated/total = %d/%d' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
+                return True
+            else:
+                # Somthing wrong
+                print('ERROR: Somthing wrong in put_task() for agent <%d> with task <%s> in the edge<%d> within T_zone=%s. The agent was not added.' % (agent_id, str(task_id), self.edge_id , str(T_zone) ) )
+                return False
+        else:
+            # Something wrong, no room left for this activated agent!!
+            print('ERROR: No room left for an agent in the edge<%d> within T_zone=%s. The agent <%d> was not added.' % (self.edge_id, agent_id, str(T_zone) ) )
+            return False
+
+
+    def remove_agent(self, agent_id, task_id=None):
+        """
+        Remove the exist agent
+        outputs
+            - True/False
+        """
+        if agent_id in self.agent_dict:
+            was_activated = self.agent_dict[agent_id].is_activated
+            if self.agent_dict[agent_id].remove_task(task_id):
+                if was_activated and (not self.agent_dict[agent_id].is_activated):
+                    # No more being activated
+                    self.num_activated_agent -= 1
+                    if self.num_activated_agent < 0:
+                        self.num_activated_agent = 0
+                        print('ERROR: The num_activated_agent < 0 after removal of an agent at edge <%d>.' % self.edge_id)
+                #
+                if self.agent_dict[agent_id].number_task(only_count_activated_task=False) == 0:
+                    # Remove this agent
+                    del self.agent_dict[agent_id]
+                    print('INFO: Agent <%d> was totally removed from edge <%d>. Then, activated/total becomes %d/%d.' % (agent_id, self.edge_id, self.num_activated_agent, len(self.agent_dict) ))
+                else:
+                    print('INFO: Agent <%d> with task <%s> was removed from edge <%d>. Then, activated/total becomes %d/%d.' % (agent_id, str(task_id), self.edge_id, self.num_activated_agent, len(self.agent_dict)) )
+                return True
+            else:
+                # Something wrong, task was not in the task_dict
+                print('ERROR: The task <%s> is not in the task_dict of agent <%d> at edge <%d>.' % (str(task_id), agent_id, self.edge_id))
+                return False
+        else:
+            # Something wrong, agent was not in the agent_dict
+            print('ERROR: The agent <%d> is not in the agent_dict at edge <%d>.' % (agent_id, self.edge_id))
+            return False
+
+    def is_agent_in_edge(self, agent_id):
+        """
+        This method check if the agent is in the agent_dict
+        """
+        return (agent_id in self.agent_dict)
+
+    def activate_agent(self, agent_id, task_id):
+        """
+        This method activates the specified agent
+        """
+        if agent_id in self.agent_dict:
+            if self.agent_dict[agent_id].activate_task(task_id):
+                self._sync_agent_dict()
+                return True
+            else:
+                print('ERROR: The agent <%d> with task <%s> is not activated at edge <%d>.' % (agent_id, str(task_id), self.edge_id))
+                return False
+        else:
+            # Something wrong
+            # Something wrong, agent was not in the dict
+            print('ERROR: The agent <%d> is not in the agent_dict at edge <%d>.' % (agent_id, self.edge_id))
+            return False
+
+    def deactivate_agent(self, agent_id, task_id=None):
+        """
+        This method deactivates the specified agent
+        """
+        if agent_id in self.agent_dict:
+            if self.agent_dict[agent_id].deactivate_task(task_id):
+                self._sync_agent_dict()
+                return True
+            else:
+                print('ERROR: The agent <%d> with task <%s> is not de-activated at edge <%d>.' % (agent_id, str(task_id), self.edge_id))
+                return False
+        else:
+            # Something wrong
+            # Something wrong, agent was not in the dict
+            print('ERROR: The agent <%d> is not in the agent_dict at edge <%d>.' % (agent_id, self.edge_id))
+            return False
+
+    def get_remained_capacity_for_T_zone(self, T_zone_occ, only_count_activated_agent=False, agent_id=None):
         """
         Get the remained capacity of the edge at given time period (unix stamp)
         inputs
             - T_zone_occ: a tuple of (min_pass_stamp, max_pass_stamp)
             - only_count_activated_agent: required to only count the currently activated (running) agents
+            - agent_id (default: None): If agent_id is given, ignore this agent in this edge.
         outputs
             - The remained capacity at specific time zone
         """
         # Go through all the agent, no matter the current one or future one
         agent_count = 0
-        for agent_id in self.agent_dict:
-            if only_count_activated_agent and (not self.agent_dict[agent_id].is_activated):
+        for agent_id_i in self.agent_dict:
+            if agent_id_i == agent_id:
+                continue
+            if only_count_activated_agent and (not self.agent_dict[agent_id_i].is_activated):
                 continue # Pass this non-activated agent
-            agent_count += (1 if self.agent_dict[agent_id].is_period_intersected(T_zone_occ) else 0)
+            agent_count += (1 if self.agent_dict[agent_id_i].is_period_intersected(T_zone_occ) else 0)
         return (self.capacity - agent_count)
 
-    def is_available_for_T_zone(self, T_zone_occ, only_count_activated_agent=False):
+    def is_available_for_T_zone(self, T_zone_occ, only_count_activated_agent=False, agent_id=None):
         """
         Check if the edge is available at given time period (unix stamp)
         inputs
             - T_zone_occ: a tuple of (min_pass_stamp, max_pass_stamp)
             - only_count_activated_agent: required to only count the currently activated (running) agents
+            - agent_id (default: None): If agent_id is given, ignore this agent in this edge.
         outputs
             - True: edge is available for the time period required
               False: edge is occupied at the time period required
         """
         # Go through all the agent, no matter the current one or future one
-        return (0 < self.get_remained_capacity_for_T_zone(T_zone_occ, only_count_activated_agent) )
+        return (0 < self.get_remained_capacity_for_T_zone(T_zone_occ, only_count_activated_agent, agent_id) )
 
-    def is_possible_to_pass(self, T_zone_start, only_count_activated_agent=False):
+    def is_possible_to_pass(self, T_zone_start, only_count_activated_agent=False, agent_id=None):
         """
         Given the time range that the agent might possibly begin to pass the edge,
         check if it is "safe" (conservatively) to pass the edge
@@ -224,6 +231,7 @@ class EDGE(object):
         inputs
             - T_zone_start: a tuple of (min_pass_stamp, max_pass_stamp)
             - only_count_activated_agent: required to only count the currently activated (running) agents
+            - agent_id (default: None): If agent_id is given, ignore this agent in this edge.
         outputs
             - True: edge is available "starting" from the time period required
               False: edge is occupied "starting" from the time period required
@@ -232,7 +240,7 @@ class EDGE(object):
         T_zone_occ = self.get_T_zone_occ_from_start(T_zone_start)
         return self.is_available_for_T_zone(T_zone_occ, only_count_activated_agent)
 
-    def is_possible_to_pass_backtrack(self, T_zone_end, only_count_activated_agent=False):
+    def is_possible_to_pass_backtrack(self, T_zone_end, only_count_activated_agent=False, agent_id=None):
         """
         Given the time range that the agent might possibly begin to "inversely" pass the edge,
         check if it is "safe" (conservatively) to pass the edge
@@ -246,6 +254,7 @@ class EDGE(object):
         inputs
             - T_zone_end: a tuple of (min_pass_stamp, max_pass_stamp)
             - only_count_activated_agent: required to only count the currently activated (running) agents
+            - agent_id (default: None): If agent_id is given, ignore this agent in this edge.
         outputs
             - True: edge is available "ending" at the time period required
               False: edge is occupied "ending" at the time period required

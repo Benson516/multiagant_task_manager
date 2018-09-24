@@ -17,7 +17,6 @@ class GEOMETRY_TASK_GRAPH(object):
         # Adjacent graph, store a list of (to_node_id, edge_id) pair of a from_node_id
         # self.adj_graph = [[] for _ in range(self.num_nodes)]
         self.adj_graph = [] # Empty
-        self.adj_graph_reversed = [] # Empty
         # Nodes
         # For searching and inverse searching between node id and the node "name"
         # Note that id and "name" are one to one
@@ -57,6 +56,9 @@ class GEOMETRY_TASK_GRAPH(object):
             - path_edges/None: a sequence of edges that the path pass through,
                                "None" means that the path has some non-exist edges.
         """
+        if path is None:
+            return None
+        # Else, non-empty path
         path_edges = []
         for i in range(len(path)-1):
             from_node_id = path[i]
@@ -241,9 +243,8 @@ class GEOMETRY_TASK_GRAPH(object):
         """
         for edge in self.edge_list:
             if edge.is_agent_in_edge(agent_id):
-                if (task_id is None) or (self.edge_list[edge_id].agent_dict[agent_id].task_id == task_id):
-                    # print('INFO: Remove the agent <%d> with task <%d> from edge <%d>.' % (agent_id, edge.agent_dict[agent_id].task_id, edge.edge_id))
-                    edge.remove_agent(agent_id)
+                # print('INFO: Remove the agent <%d> with task <%d> from edge <%d>.' % (agent_id, edge.agent_dict[agent_id].task_id, edge.edge_id))
+                edge.remove_agent(agent_id, task_id)
         #
         return True
 
@@ -285,21 +286,24 @@ class GEOMETRY_TASK_GRAPH(object):
         for edge_id in path_edge:
             # Remove agent
             if self.edge_list[edge_id].is_agent_in_edge(agent_id):
-                if (task_id is None) or (self.edge_list[edge_id].agent_dict[agent_id].task_id == task_id):
-                    # print('INFO: Remove agent <%d> with task <%s> from edge <%d>.' % (agent_id, str(self.edge_list[edge_id].agent_dict[agent_id].task_id), self.edge_list[edge_id].edge_id))
-                    self.edge_list[edge_id].remove_agent(agent_id)
+                # print('INFO: Remove agent <%d> with task <%s> from edge <%d>.' % (agent_id, str(self.edge_list[edge_id].agent_dict[agent_id].task_id), self.edge_list[edge_id].edge_id))
+                self.edge_list[edge_id].remove_agent(agent_id, task_id)
         #
         # Remove from nodes
         # TODO: Remove from nodes on path, too!
 
         return True
 
-    def _add_agent_by_path(self, path, T_zone_start, agent_id, task_id=None, is_activated=True):
+    def _add_agent_by_path(self, path, T_zone_start, agent_id, task_id, is_activated=True):
         """
         Add an agent according to a list of node "path"
         with specified/non-specified task_id.
         inputs
+            - path
             - T_zone_start = (T_min, T_max)
+            - agent_id
+            - task_id
+            - is_activated
         outputs
             - True/False
         """
@@ -328,7 +332,7 @@ class GEOMETRY_TASK_GRAPH(object):
 
     # Traversal methods
     #---------------------------------------#
-    def qrarry_path_exist(self, T_zone_start, start_id, end_id, top_priority_for_activated_agent=False):
+    def query_path_exist(self, T_zone_start, start_id, end_id, top_priority_for_activated_agent=False):
         """
         This method ues dijkstra alogorithm to find out the best path
         or find out that there is no path at all.
@@ -345,7 +349,7 @@ class GEOMETRY_TASK_GRAPH(object):
         # TODO: Decide if also need to check the nodes on path??
         return ( not (ge.dijkstras(self.adj_graph, self.edge_list, T_zone_start, start_id, end_id, top_priority_for_activated_agent) is None) )
 
-    def book_a_path(self, T_zone_start, start_id, end_id, agent_id, task_id=None):
+    def book_a_path(self, T_zone_start, start_id, end_id, agent_id, task_id):
         """
         This method ues dijkstra alogorithm to find out the best path
         or find out that there is no path at all.
