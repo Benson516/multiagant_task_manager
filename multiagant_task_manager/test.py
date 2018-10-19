@@ -12,12 +12,12 @@ graph.add_one_node_by_name('F')
 graph.add_one_node_by_name('G')
 
 # (from_node_name, to_node_name, is_bidirectional, capacity, min_pass_time, max_pass_time)
-graph.add_one_edge_by_node_name('A','B',True, 2, (1, 5))
-graph.add_one_edge_by_node_name('B','C',False, 2, (1, 2))
+graph.add_one_edge_by_node_name('A','B',True, 2, (5, 5))
+graph.add_one_edge_by_node_name('B','C',False, 2, (2, 2))
 graph.add_one_edge_by_node_name('C','D',False, 3, (1, 3))
 graph.add_one_edge_by_node_name('D','E',True, 1, (1, 2))
 # graph.add_one_edge_by_node_name('E','A',True, 1, (1, 2))
-graph.add_one_edge_by_node_name('A','D',True, 2, (1, 2))
+graph.add_one_edge_by_node_name('A','D',True, 2, (1, 5))
 
 graph.add_one_edge_by_node_name('E','G',True, 1, (1, 2))
 graph.add_one_edge_by_node_name('A','F',True, 1, (1, 2))
@@ -55,6 +55,9 @@ print("# of connected component = %d" % res)
 path = ge.dijkstras(graph.adj_graph, graph.edge_list, (0,0), 5, 6, False)
 print("Dijkstra's path = " + str(path))
 
+path = ge.dijkstras_backtrack(graph.adj_graph, graph.edge_list, (0,8), 5, 6, False)
+print("Dijkstra's path = " + str(path))
+
 # test removing agents
 # path.append(7)
 # print("new path = " + str(path))
@@ -62,13 +65,13 @@ graph._remove_agent_by_path(path, 1)
 graph.print_edge_list(is_showing_by_node_name=True)
 graph._add_agent_by_path(path, (0,0), 1, 10, False)
 graph.print_edge_list(is_showing_by_node_name=True)
-graph._remove_agent_by_path(path[:3], (0,0), 1)
+graph._remove_agent_by_path(path[:3], 1, 10)
 graph.print_edge_list(is_showing_by_node_name=True)
 #
 graph._remove_agent_from_all_edges(1)
 graph.print_edge_list(is_showing_by_node_name=True)
 
-graph.book_a_path((50,100), 0, 6, 7)
+graph.book_a_path((50,100), 0, 6, 7, 2)
 graph.print_edge_list(is_showing_by_node_name=True)
 
 
