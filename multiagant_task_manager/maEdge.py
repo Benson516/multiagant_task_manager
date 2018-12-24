@@ -1,4 +1,4 @@
-import maAgent as ag
+import maTask as tk
 
 # The class for edge and its states
 #-------------------------------#
@@ -16,7 +16,7 @@ class EDGE(object):
                                   (should not be smaller than min_pass_time)
 
     States (dynamically changed)
-        - agent_dict: dictionary of agent that map from agent_id to ag.AGENT() object
+        - agent_dict: dictionary of agent that map from agent_id to tk.TASK() object
         - num_activated_agent: The agent that marked is_activated=True
     """
     #       EDGE(edge_id, from_node_id, to_node_id, is_bidirectional, capacity, duration)
@@ -61,7 +61,7 @@ class EDGE(object):
         # States of the edge
         #-------------------------------#
         # Agents that own this edge at current time or future time
-        self.agent_dict = dict() # Elements are {agent_id:ag.AGENT(), ...}
+        self.agent_dict = dict() # Elements are {agent_id:tk.AGENT(), ...}
 
         # ** Important!! **
         # The fllowing numbers should be syncing with self.agent_dict
@@ -91,7 +91,7 @@ class EDGE(object):
             - True/False
         """
         if not agent_id in self.agent_dict:
-            self.agent_dict[agent_id] = ag.AGENT(agent_id)
+            self.agent_dict[agent_id] = tk.AGENT(agent_id)
         # else
         if self.is_available_for_T_zone(T_zone, only_count_activated_agent=False):
             if self.agent_dict[agent_id].put_task(task_id, is_activated, T_zone):
