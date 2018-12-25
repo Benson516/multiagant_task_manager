@@ -11,7 +11,7 @@ class TASK(object):
     """
     def __init__(self, task_id, agent_id, priority=0, T_zone=(0,None)):
         """
-        * task_id
+        * task_id (-1: only valid for NODEs, idle task, the agent stay there)
         * agent_id
         - priority      (default: 0, negative means that it can be deleted by system)
         - T_zone = (min_pass_stamp, max_pass_stamp)
