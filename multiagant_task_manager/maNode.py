@@ -3,11 +3,12 @@ import maAgent as ag
 
 # The class for node and its states
 #-------------------------------#
-class Node(object):
+class NODE(object):
     """
     Properties (static)
         - node_id (int): The id of the node
         - name (string): The name of the node
+        - is_stayable (bool): If the node is able to be safely stay (eternally) by an agent without blocking other agent's path
         - capacity (int): The maximum number of agent to stay/pass the node at the same time
 
     States (dynamically changed)
@@ -19,11 +20,12 @@ class Node(object):
     NOTE: When a task finished, the agent will stay at the last node of the path.
           This occupation is defined by idle_task_list
     """
-    def __init__(self, node_id, name, capacity=1):
+    def __init__(self, node_id, name, is_stayable=False, capacity=1):
         """
         inputs (* denote the "must-have"(mandatory) )
         * node_id
         * name
+        - is_stayable       (default: False)
         - capacity          (default: 1 unit)
         """
         # Properties of the node
@@ -33,6 +35,7 @@ class Node(object):
         self.name       = name
 
         # The following parameters have default values
+        self.is_stayable = bool(is_stayable)
         self.capacity = int(capacity)
         #--------------------------------------#
 
