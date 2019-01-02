@@ -43,35 +43,43 @@ print("\n")
 print("(#node, #edge) = (%d, %d)" % (graph.num_nodes, graph.num_edges))
 
 graph.print_adj_graph(is_showing_by_node_name=True)
+graph.print_node_list()
 graph.print_edge_list(is_showing_by_node_name=True)
 
 # test the kernel functions
-res = ge.reachability(0, 3, graph.adj_graph, graph.edge_list, True)
+res = ge.reachability(0, 3, graph.adj_graph, graph.node_list, graph.edge_list, True)
 print("reachability = " + str(res))
-res = ge.number_of_connected_components(graph.adj_graph, graph.edge_list, True)
+res = ge.number_of_connected_components(graph.adj_graph, graph.node_list, graph.edge_list, True)
 print("# of connected component = %d" % res)
 
 # Dijkstra
-path = ge.dijkstras(graph.adj_graph, graph.edge_list, (0,0), 5, 6, False)
+path = ge.dijkstras(graph.adj_graph, graph.node_list, graph.edge_list, (0,0), 5, 6, False)
 print("Dijkstra's path = " + str(path))
 
-path = ge.dijkstras_backtrack(graph.adj_graph, graph.edge_list, (0,8), 5, 6, False)
+path = ge.dijkstras_backtrack(graph.adj_graph, graph.node_list, graph.edge_list, (0,8), 5, 6, False)
 print("Dijkstra's path = " + str(path))
 
 # test removing agents
 # path.append(7)
 # print("new path = " + str(path))
 graph._remove_agent_by_path(path, 1)
+graph.print_node_list()
 graph.print_edge_list(is_showing_by_node_name=True)
-graph._add_agent_by_path(path, (0,0), 1, 10, False)
+
+graph._add_task_by_path(path, (0,0), 10, 1, 2)
+graph.print_node_list()
 graph.print_edge_list(is_showing_by_node_name=True)
+
 graph._remove_agent_by_path(path[:3], 1, 10)
+graph.print_node_list()
 graph.print_edge_list(is_showing_by_node_name=True)
 #
-graph._remove_agent_from_all_edges(1)
+graph.remove_agent_from_graph(1)
+graph.print_node_list()
 graph.print_edge_list(is_showing_by_node_name=True)
 
 graph.book_a_path((50,100), 0, 6, 7, 2)
+graph.print_node_list()
 graph.print_edge_list(is_showing_by_node_name=True)
 
 

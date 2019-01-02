@@ -77,6 +77,7 @@ class NODE(object):
             - True/False
         """
         if task_id in self.task_dict:
+            agent_id = self.task_dict[task_id].agent_id # For printing informations
             # Simply delete it
             del self.task_dict[task_id]
             print('INFO: Task<%d> of agent<%d> was removed from node<%s>. Then, total_task becomes %d.' % (task_id, agent_id, self.name, len(self.task_dict)) )
@@ -86,19 +87,20 @@ class NODE(object):
             print('WARN: Task <%d> does not exist in the node<%s>.' % (task_id, self.name ) )
             return False
 
-    def remove_agent(self, agent_id):
+    def remove_agent(self, agent_id, task_id=None):
         """
         Remove all tasks of the agent.
         outputs
             --
         """
         rm_task_list = list()
-        for task_id in self.task_dict:
-            if self.task_dict[task_id].agent_id == agent_id:
-                rm_task_list.append(task_id)
+        for task_id_i in self.task_dict:
+            if (task_id is None) or (task_id_i == task_id):
+                if self.task_dict[task_id_i].agent_id == agent_id:
+                    rm_task_list.append(task_id_i)
         # Delete those tasks
-        for task_id in rm_task_list:
-            self.remove_task(task_id)
+        for task_id_i in rm_task_list:
+            self.remove_task(task_id_i)
 
     def remove_low_priority(self, priority):
         """

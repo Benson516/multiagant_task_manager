@@ -232,12 +232,30 @@ class GEOMETRY_TASK_GRAPH(object):
             print(Str_out)
         return Str_out
 
-    def print_node_list(self, is_printing=True, is_showing_by_node_name=True):
+    def print_node_list(self, is_printing=True):
         """
         This function print or return a beautiful layout of self.node_list by string.
         """
         # TODO: Implement this function.
-        pass
+        Str_out = "\nnode_list with <%d> nodes\n" % self.num_nodes
+        Str_out += "---------------------------------------------------------------------------------------\n"
+        for i in range(self.num_nodes):
+            _N = self.node_list[i]
+            node_id = _N.node_id
+            Str_out += "#%d (" % node_id
+            Str_out += "name = '" + _N.name + "'):\t"
+            Str_out += "cap=%d, " % _N.capacity
+            Str_out += "#task=%d, " % len(_N.task_dict)
+            Str_out += "tasks={"
+            for task_id in _N.task_dict:
+                Str_out += str(_N.task_dict[task_id]) + ", "
+            Str_out += "}"
+            Str_out += "\n"
+        Str_out += "---------------------------------------------------------------------------------------\n"
+        # Print out
+        if is_printing:
+            print(Str_out)
+        return Str_out
 
     def print_path(self, path, is_printing=True, is_showing_by_node_name=True):
         """
@@ -258,32 +276,20 @@ class GEOMETRY_TASK_GRAPH(object):
 
 
 
+    # Task operation
+    #--------------------------------------#
 
-
-    # Agent operations
-    #---------------------------------------#
-    def _remove_agent_from_all_edges(self, agent_id):
+    def remove_task(self, task_id):
         """
-        Remove an agent from all edges with specified/non-specified task_id.
+        Remove a task from all edges and nodes.
         """
         for edge in self.edge_list:
-            if edge.has_agent(agent_id):
-                # print('INFO: Remove the agent <%d> with task <%d> from edge <%d>.' % (agent_id, edge.agent_dict[agent_id].task_id, edge.edge_id))
-                edge.remove_agent(agent_id)
-        #
-        return True
-
-    def _remove_agent_from_all_nodes(self, agent_id):
-        """
-        Remove an agent from all nodes with specified/non-specified task_id.
-        """
+            if edge.has_task(task_id):
+                edge.remove_task(task_id)
         for node in self.node_list:
-            if node.has_agent(agent_id):
-                # print('INFO: Remove the agent <%d> with task <%d> from edge <%d>.' % (agent_id, edge.agent_dict[agent_id].task_id, edge.edge_id))
-                node.remove_agent(agent_id)
-        #
+            if node.has_task(task_id):
+                node.remove_task(task_id)
         return True
-
 
     def _remove_task_by_path(self, path, task_id, is_keeping_agent_on_last_node=False):
         """
@@ -291,7 +297,7 @@ class GEOMETRY_TASK_GRAPH(object):
         with specified task_id.
 
         inputs
-            - is_keeping_agent_on_last_node (default:True):
+            - is_keeping_agent_on_last_node (default:False):
                 Decide if the last node on path (end) is going to be removed.
                 (o--o--o--o--o--x <-- Does the agent on last node need to be removed?)
                 Note: This is defaultly set to False for whole path cleanning.
@@ -330,6 +336,22 @@ class GEOMETRY_TASK_GRAPH(object):
                 # print('INFO: Remove task <%s> from node <%d>.' % (task_id, node_id))
                 self.node_list[node_id].remove_task(task_id)
         return True
+    #--------------------------------------#
+    #  end Task operation
+
+
+
+    # Agent operations
+    #---------------------------------------#
+    def remove_agent_from_graph(self, agent_id):
+        """
+        Remove an agent from all edges and nodes.
+        """
+        for edge in self.edge_list:
+            edge.remove_agent(agent_id)
+        for node in self.node_list:
+            node.remove_agent(agent_id)
+        return True
 
     def _remove_agent_by_path(self, path, agent_id, task_id=None, is_keeping_agent_on_last_node=False):
         """
@@ -350,10 +372,6 @@ class GEOMETRY_TASK_GRAPH(object):
                     , from start_id to some current node_id;
                     hence, we should keep the last node (current node_id)
         """
-        if not task_id is None:
-            self._remove_task_by_path(path, task_id, is_keeping_agent_on_last_node)
-            return
-        # Else, any task
         # Check if this is a valid path (it's indeed a path for that edges exist between each node-pair)
         path_edge = self._get_edge_list_from_path(path)
         if path_edge is None:
@@ -362,10 +380,7 @@ class GEOMETRY_TASK_GRAPH(object):
 
         # Remove from edges
         for edge_id in path_edge:
-            # Remove task
-            if self.edge_list[edge_id].has_agent(task_id):
-                # print('INFO: Remove task <%s> from edge <%d>.' % (task_id, edge_id))
-                self.edge_list[edge_id].remove_agent(task_id)
+            self.edge_list[edge_id].remove_agent(agent_id, task_id)
         #
         # Remove from nodes
         if is_keeping_agent_on_last_node:
@@ -374,25 +389,20 @@ class GEOMETRY_TASK_GRAPH(object):
             path_ = path
         #
         for node_id in path_:
-            # Remove task
-            if self.node_list[node_id].has_agent(task_id):
-                # print('INFO: Remove task <%s> from node <%d>.' % (task_id, node_id))
-                self.node_list[node_id].remove_agent(task_id)
+            self.node_list[node_id].remove_agent(agent_id, task_id)
+
         return True
 
 
-
-
-    def _add_agent_by_path(self, path, T_zone_start, agent_id, task_id, is_activated=True):
+    def _add_task_by_path(self, path, T_zone_start, task_id, agent_id, priority=0):
         """
         Add an agent according to a list of node "path"
-        with specified/non-specified task_id.
         inputs
             - path
             - T_zone_start = (T_min, T_max)
-            - agent_id
             - task_id
-            - is_activated
+            - agent_id
+            - priority
         outputs
             - True/False
         """
@@ -402,22 +412,32 @@ class GEOMETRY_TASK_GRAPH(object):
             # Invalid path
             return False
 
-        # Add to edges
-        T_zone_tmp = T_zone_start
-        T_zone_occ = T_zone_start
-        for edge_id in path_edge:
-            # Add agent
-            T_zone_occ = self.edge_list[edge_id].get_T_zone_occ_from_start(T_zone_tmp)
-            T_zone_tmp = self.edge_list[edge_id].get_T_zone_end_from_start(T_zone_tmp)
-            self.edge_list[edge_id].put_agent(agent_id, task_id, is_activated, T_zone_occ)
+        # Start traversing
+        n_node = len(path)
+        # Add to node-edge pairs
+        T_zone_from_node = T_zone_start
+        T_zone_occ_edge = T_zone_start
+        for i in range(n_node-1): # Note that is n_node=1, we wion't enter this loop.
+            node_id = path[i]
+            edge_id = path_edge[i]
+            # Add to node
+            self.node_list[node_id].put_task(task_id, agent_id, priority, T_zone_from_node)
+            # Calculate T_zone
+            T_zone_occ_edge = self.edge_list[edge_id].get_T_zone_occ_from_start(T_zone_from_node)
+            T_zone_from_node = self.edge_list[edge_id].get_T_zone_end_from_start(T_zone_from_node)
+            # Add to edge
+            self.edge_list[edge_id].put_task(task_id, agent_id, priority, T_zone_occ_edge)
             # print('INFO: Add agent <%d> with task <%s> from edge <%d>.' % (agent_id, str(self.edge_list[edge_id].agent_dict[agent_id].task_id), self.edge_list[edge_id].edge_id))
             # Note that we have to print this after adding agent
 
-        # Add to nodes
-        # TODO: Add to nodes on path, too!
+        # Add the last node
+        self.node_list[path[-1]].put_task(task_id, agent_id, priority, T_zone_from_node)
 
         return True
     #---------------------------------------#
+
+
+
 
     # Traversal methods
     #---------------------------------------#
@@ -456,7 +476,7 @@ class GEOMETRY_TASK_GRAPH(object):
             - T_zone_total: Total occupation time (stamp) for this path, from start to end
         """
         # Note that top_priority_for_activated_agent is set to False
-        path = ge.dijkstras(self.adj_graph, self.edge_list, T_zone_start, start_id, end_id, False)
+        path = ge.dijkstras(self.adj_graph, self.node_list, self.edge_list, T_zone_start, start_id, end_id, False)
         if path is None:
             # Non-reachable
             return None
@@ -466,7 +486,7 @@ class GEOMETRY_TASK_GRAPH(object):
 
         # Else
         # Note that the activation of the agent is set to False
-        self._add_agent_by_path(path, T_zone_start, agent_id, task_id, False)
+        self._add_task_by_path(path, T_zone_start, task_id, agent_id, 0)
         # TODO: retrun a variable indicating that there is no node being occupied by agent.
         # TODO: return T_zone_total
         return path

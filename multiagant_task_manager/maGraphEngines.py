@@ -20,14 +20,17 @@ def Explore(nid, adj, visited):
     # the end
 
 # Kernel function for finding reachability
-def Explore_capacity(nid, adj, edges, visited, T_zone, only_count_activated_agent=False):
+def Explore_capacity(nid, adj, nodes, edges, visited, T_zone, priority=0, agent_id=None):
     """
     Recursive function for depth-first search.
     """
     visited[nid] = True
+    if not nodes[nid].is_available_for_T_zone(T_zone, priority, agent_id):
+        return
+    # Else
     for to_nid, eid in adj[nid]:
-        if not visited[to_nid] and edges[eid].is_available_for_T_zone(T_zone, only_count_activated_agent):
-            Explore_capacity(to_nid, adj, edges, visited, T_zone, only_count_activated_agent)
+        if not visited[to_nid] and edges[eid].is_available_for_T_zone(T_zone, priority, agent_id):
+                Explore_capacity(to_nid, adj, nodes, edges, visited, T_zone, priority, agent_id)
     # the end
 
 # Kernel function for finding connected components
@@ -43,15 +46,18 @@ def Explore_cc(nid, adj, visited, cc, CCnum):
     # the end
 
 # Kernel function for finding connected components
-def Explore_cc_capcity(nid, adj, edges, visited, cc, CCnum, T_zone, only_count_activated_agent=False):
+def Explore_cc_capcity(nid, adj, nodes, edges, visited, cc, CCnum, T_zone, priority=0, agent_id=None):
     """
     Recursive function for depth-first search.
     """
     visited[nid] = True
     CCnum[nid] = cc
+    if not nodes[nid].is_available_for_T_zone(T_zone, priority, agent_id):
+        return
+    # Else
     for to_nid, eid in adj[nid]:
-        if not visited[to_nid] and edges[eid].is_available_for_T_zone(T_zone, only_count_activated_agent):
-            Explore_cc_capcity(to_nid, adj, edges, visited, cc, CCnum, T_zone, only_count_activated_agent)
+        if not visited[to_nid] and edges[eid].is_available_for_T_zone(T_zone, priority, agent_id):
+            Explore_cc_capcity(to_nid, adj, nodes, edges, visited, cc, CCnum, T_zone, priority, agent_id)
     # the end
 
 
@@ -61,7 +67,7 @@ def Explore_cc_capcity(nid, adj, edges, visited, cc, CCnum, T_zone, only_count_a
 
 
 #------------------------------------------------#
-def reachability(x, y, adj, edges=None, count_capacity=True, T_zone=(0,None), only_count_activated_agent=False):
+def reachability(x, y, adj, nodes=None, edges=None, count_capacity=True, T_zone=(0,None), priority=0, agent_id=None):
     """
     Finding the reachiability from node_id:x to node_id:y
 
@@ -71,14 +77,14 @@ def reachability(x, y, adj, edges=None, count_capacity=True, T_zone=(0,None), on
     """
     visited = [False for _ in range(len(adj))]
     if count_capacity:
-        Explore_capacity(x, adj, edges, visited, T_zone, only_count_activated_agent)
+        Explore_capacity(x, adj, nodes, edges, visited, T_zone, priority, agent_id)
     else:
         # Simply traverse through the topology of graph,
         # not counting capacity of edges
         Explore(x, adj, visited)
     return visited[y]
 
-def number_of_connected_components(adj, edges=None, count_capacity=True, T_zone=(0,None), only_count_activated_agent=False):
+def number_of_connected_components(adj, nodes=None, edges=None, count_capacity=True, T_zone=(0,None), priority=0, agent_id=None):
     """
     Find the total number of connected components
 
@@ -92,7 +98,7 @@ def number_of_connected_components(adj, edges=None, count_capacity=True, T_zone=
     if count_capacity:
         for nid in range(len(adj)):
             if not visited[nid]:
-                Explore_cc_capcity(nid, adj, edges, visited, cc, CCnum, T_zone, only_count_activated_agent)
+                Explore_cc_capcity(nid, adj, nodes, edges, visited, cc, CCnum, T_zone, priority, agent_id)
                 cc += 1
     else:
         # Simply traverse through the topology of graph,
@@ -138,7 +144,7 @@ def get_path(prev, last_nid, is_reversing_path=True):
 
 
 
-def dijkstras(adj, edges, T_zone_start, start_id, end_id, top_priority_for_activated_agent=False, agent_id=None):
+def dijkstras(adj, nodes, edges, T_zone_start, start_id, end_id, priority=0, agent_id=None):
     """
     This method ues dijkstra alogorithm to find out the best path
     or find out that there is no path at all.
@@ -154,15 +160,13 @@ def dijkstras(adj, edges, T_zone_start, start_id, end_id, top_priority_for_activ
         - T_zone_start = (T_min, T_max)
         - start_id
         - end_id
-        - top_priority_for_activated_agent
+        - priority
         - agent_id (default: None): If agent_id is given, ignore this agent in this edge.
 
     outputs
         - path/None: a sequence (list) of node_id from start_id to end_id
                      or "None" means no valid path
     """
-    # Decide that if we only see the activated agent!!
-    only_count_activated_agent = top_priority_for_activated_agent
 
     # We minimize the T_max
     id_opt_target = 1 # minimize the total duration_max
@@ -210,9 +214,9 @@ def dijkstras(adj, edges, T_zone_start, start_id, end_id, top_priority_for_activ
         nid_u = uh[1]
         # print("uh[0] = " + str(uh[0]) + ", uh[1] = " + str(uh[1]))
         for nid_v, eid in adj[nid_u]:
-            # Check if the edge is "valid"
+            # Check if the edge is available
             # nid_u --eid--> nid_v
-            if edges[eid].is_possible_to_pass(T_zone_nodes[nid_u], only_count_activated_agent, agent_id):
+            if edges[eid].is_possible_to_pass(T_zone_nodes[nid_u], priority, agent_id):
                 # Relax
                 if id_opt_target == 2:
                     weight_uv = edges[eid].duration[1] - edges[eid].duration[0] # Minimoze the difference of duration_max and duration_min, for minimizing the uncertainties
@@ -220,16 +224,19 @@ def dijkstras(adj, edges, T_zone_start, start_id, end_id, top_priority_for_activ
                     weight_uv = edges[eid].duration[id_opt_target] # Minimize the total duration with specified id_opt_target
                 #
                 if dist[nid_v] > (dist[nid_u] + weight_uv):
-                    dist[nid_v] = (dist[nid_u] + weight_uv)
-                    T_zone_nodes[nid_v] = edges[eid].get_T_zone_end_from_start(T_zone_nodes[nid_u]) # Update time_zone of the node
-                    prev[nid_v] = nid_u
-                    """
-                    print("update (u, v) = (%d, %d)" % (nid_u, nid_v))
-                    print("dist = " + str(dist))
-                    print("prev = " + str(prev))
-                    print("\n")
-                    """
-                    heap.put_nowait( (dist[nid_v], nid_v) )
+                    T_zone_node_v = edges[eid].get_T_zone_end_from_start(T_zone_nodes[nid_u]) # Update time_zone of the node
+                    # Check if the next node is available
+                    if nodes[nid_v].is_available_for_T_zone(T_zone_node_v, priority, agent_id):
+                        dist[nid_v] = (dist[nid_u] + weight_uv)
+                        T_zone_nodes[nid_v] = T_zone_node_v
+                        prev[nid_v] = nid_u
+                        """
+                        print("update (u, v) = (%d, %d)" % (nid_u, nid_v))
+                        print("dist = " + str(dist))
+                        print("prev = " + str(prev))
+                        print("\n")
+                        """
+                        heap.put_nowait( (dist[nid_v], nid_v) )
             #
         # end for
     # end while
@@ -290,7 +297,7 @@ def generate_reverse_graph(adj):
     #
     return adj_reversed
 
-def dijkstras_backtrack(adj_in, edges, T_zone_end, start_id, end_id, top_priority_for_activated_agent=False, agent_id=None):
+def dijkstras_backtrack(adj_in, nodes, edges, T_zone_end, start_id, end_id, priority=0, agent_id=None):
     """
     This method ues dijkstra alogorithm to find out the best path
     or find out that there is no path at all.
@@ -306,7 +313,7 @@ def dijkstras_backtrack(adj_in, edges, T_zone_end, start_id, end_id, top_priorit
         - T_zone_end = (T_min, T_max)
         - start_id
         - end_id
-        - top_priority_for_activated_agent
+        - priority
         - agent_id (default: None): If agent_id is given, ignore this agent in this edge.
 
     outputs
@@ -316,8 +323,6 @@ def dijkstras_backtrack(adj_in, edges, T_zone_end, start_id, end_id, top_priorit
     # Get a reversed graph
     adj = generate_reverse_graph(adj_in)
 
-    # Decide that if we only see the activated agent!!
-    only_count_activated_agent = top_priority_for_activated_agent
 
     # We minimize the T_max
     id_opt_target = 1 # minimize the total duration_max
@@ -367,7 +372,7 @@ def dijkstras_backtrack(adj_in, edges, T_zone_end, start_id, end_id, top_priorit
         for nid_v, eid in adj[nid_u]:
             # Check if the edge is "valid"
             # nid_u --eid--> nid_v
-            if edges[eid].is_possible_to_pass_backtrack(T_zone_nodes[nid_u], only_count_activated_agent, agent_id):
+            if edges[eid].is_possible_to_pass_backtrack(T_zone_nodes[nid_u], priority, agent_id):
                 T_v_tmp = edges[eid].get_T_zone_start_from_end(T_zone_nodes[nid_u]) # Update time_zone of the node
                 if T_v_tmp[1] < T_v_tmp[0]:
                     # This edge is closed, unable to be backtracked
@@ -379,16 +384,19 @@ def dijkstras_backtrack(adj_in, edges, T_zone_end, start_id, end_id, top_priorit
                     weight_uv = edges[eid].duration[id_opt_target] # Minimize the total duration with specified id_opt_target
                 #
                 if dist[nid_v] > (dist[nid_u] + weight_uv):
-                    dist[nid_v] = (dist[nid_u] + weight_uv)
-                    T_zone_nodes[nid_v] = T_v_tmp # Update time_zone of the node
-                    prev[nid_v] = nid_u
-                    """
-                    print("update (u, v) = (%d, %d)" % (nid_u, nid_v))
-                    print("dist = " + str(dist))
-                    print("prev = " + str(prev))
-                    print("\n")
-                    """
-                    heap.put_nowait( (dist[nid_v], nid_v) )
+                    T_zone_node_v = edges[eid].get_T_zone_end_from_start(T_zone_nodes[nid_u]) # Update time_zone of the node
+                    # Check if the next node is available
+                    if nodes[nid_v].is_available_for_T_zone(T_zone_node_v, priority, agent_id):
+                        dist[nid_v] = (dist[nid_u] + weight_uv)
+                        T_zone_nodes[nid_v] = T_v_tmp # Update time_zone of the node
+                        prev[nid_v] = nid_u
+                        """
+                        print("update (u, v) = (%d, %d)" % (nid_u, nid_v))
+                        print("dist = " + str(dist))
+                        print("prev = " + str(prev))
+                        print("\n")
+                        """
+                        heap.put_nowait( (dist[nid_v], nid_v) )
             #
         # end for
     # end while
