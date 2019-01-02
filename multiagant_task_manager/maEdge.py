@@ -135,7 +135,7 @@ class EDGE(object):
         for task_id in rm_task_list:
             self.remove_task(task_id)
 
-    def have_task(self, task_id):
+    def has_task(self, task_id):
         """
         This method check if the task is in the task_dict
         outputs
@@ -143,7 +143,7 @@ class EDGE(object):
         """
         return (task_id in self.task_dict)
 
-    def have_agent(self, agent_id):
+    def has_agent(self, agent_id):
         """
         This method check if the agent is in the task_dict
         outputs
@@ -219,7 +219,7 @@ class EDGE(object):
               False: edge is occupied "starting" from the time period required
         """
         # Calculate the proper time zone that this agent occupied when passing this edge
-        T_zone_occ = self._get_T_zone_occ_from_start(T_zone_start)
+        T_zone_occ = self.get_T_zone_occ_from_start(T_zone_start)
         return self.is_available_for_T_zone(T_zone_occ, priority, agent_id)
 
     def is_possible_to_pass_backtrack(self, T_zone_end, priority=0, agent_id=None):
@@ -243,11 +243,11 @@ class EDGE(object):
               False: edge is occupied "ending" at the time period required
         """
         # Calculate the proper time zone that this agent occupied when passing this edge
-        T_zone_occ = self._get_T_zone_occ_from_end(T_zone_end)
+        T_zone_occ = self.get_T_zone_occ_from_end(T_zone_end)
         return self.is_available_for_T_zone(T_zone_occ, priority, agent_id)
 
     #------ utilities ------#
-    def _get_T_zone_occ_from_start(self, T_zone_start):
+    def get_T_zone_occ_from_start(self, T_zone_start):
         """
         Utility function for calculating the maximum time-zone stamps during the edge,
         given time zone from start
@@ -258,7 +258,7 @@ class EDGE(object):
         """
         return ( T_zone_start[0], (T_zone_start[1] + self.duration[1]) )
 
-    def _get_T_zone_occ_from_end(self, T_zone_end):
+    def get_T_zone_occ_from_end(self, T_zone_end):
         """
         Utility function for calculating the maximum time-zone stamps during the edge,
         given time zone from end
@@ -269,7 +269,7 @@ class EDGE(object):
         """
         return ( (T_zone_end[0] - self.duration[0]), T_zone_end[1] )
 
-    def _get_T_zone_end_from_start(self, T_zone_start):
+    def get_T_zone_end_from_start(self, T_zone_start):
         """
         Utility function for calculating the time stamps after passage the edge,
         given time zone from start
@@ -280,7 +280,7 @@ class EDGE(object):
         """
         return ( (T_zone_start[0] + self.duration[0]), (T_zone_start[1] + self.duration[1]) )
 
-    def _get_T_zone_start_from_end(self, T_zone_end):
+    def get_T_zone_start_from_end(self, T_zone_end):
         """
         Utility function for calculating the time stamps before passage the edge,
         given time zone from end

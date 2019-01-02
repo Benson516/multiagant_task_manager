@@ -71,7 +71,7 @@ class TASK(object):
         #
         if T_zone_in[1] is None:
             # 'None' means infinity
-            return (T_zone_in[0] <= self.T_zone_in[1])
+            return (T_zone_in[0] <= self.T_zone[1])
         if T_zone_in[1] < T_zone_in[0]:
             print('WARN: the max_pass_stamp is smaller than min_pass_stamp in T_zone_in.')
-        return (T_zone_in[1] >= self.T_zone_in[0]) and (T_zone_in[0] <= self.T_zone_in[1])
+        return (T_zone_in[1] >= self.T_zone[0]) and (T_zone_in[0] <= self.T_zone[1])

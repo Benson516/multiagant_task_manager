@@ -1,4 +1,4 @@
-import maAgent as ag
+import maTask as tk
 
 
 # The class for node and its states
@@ -16,9 +16,6 @@ class NODE(object):
         - idle_task_list: a list of task with task_id are all (-1) <-- idle,
                           while priorities are the higest (2) <-- occupying,
                           and the T_zone are infinite for the last one
-
-    NOTE: When a task finished, the agent will stay at the last node of the path.
-          This occupation is defined by idle_task_list
     """
     def __init__(self, node_id, name, is_stayable=False, capacity=1):
         """
@@ -117,7 +114,7 @@ class NODE(object):
         for task_id in rm_task_list:
             self.remove_task(task_id)
 
-    def have_task(self, task_id):
+    def has_task(self, task_id):
         """
         This method check if the task is in the task_dict
         outputs
@@ -125,7 +122,7 @@ class NODE(object):
         """
         return (task_id in self.task_dict)
 
-    def have_agent(self, agent_id):
+    def has_agent(self, agent_id):
         """
         This method check if the agent is in the task_dict
         outputs

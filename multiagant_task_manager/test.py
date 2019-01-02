@@ -23,12 +23,12 @@ graph.add_one_edge_by_node_name('E','G',True, 1, (1, 2))
 graph.add_one_edge_by_node_name('A','F',True, 1, (1, 2))
 
 # test of put_agent()
-graph.edge_list[1].put_agent(2, 100, True, (100, 201))
-graph.edge_list[2].put_agent(3, 101, True, (100, 201))
-graph.edge_list[3].put_agent(1, 102, True, (100, 201))
-graph.edge_list[2].put_agent(1, 103, False, (100, 201))
-graph.edge_list[1].put_agent(1, 104, True, (100, 201))
-graph.edge_list[0].put_agent(0, 103, True, (100, 201))
+graph.edge_list[1].put_task(100, 2, 0, (100, 201))
+graph.edge_list[2].put_task(101, 3, 0, (100, 201))
+graph.edge_list[3].put_task(102, 1, 0, (100, 201))
+graph.edge_list[2].put_task(103, 1, 0, (100, 201))
+graph.edge_list[1].put_task(104, 1, 0, (100, 201))
+graph.edge_list[0].put_task(103, 0, 0, (100, 201))
 
 # Test of time zone calculations
 print("\n")
