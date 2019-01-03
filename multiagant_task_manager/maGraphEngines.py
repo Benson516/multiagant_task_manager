@@ -67,7 +67,7 @@ def Explore_cc_capcity(nid, adj, nodes, edges, visited, cc, CCnum, T_zone, prior
 
 
 #------------------------------------------------#
-def reachability(x, y, adj, nodes=None, edges=None, count_capacity=True, T_zone=(0,None), priority=0, agent_id=None):
+def reachability(start_id, end_id, adj, nodes=None, edges=None, count_capacity=True, T_zone=(0,None), priority=0, agent_id=None):
     """
     Finding the reachiability from node_id:x to node_id:y
 
@@ -77,12 +77,12 @@ def reachability(x, y, adj, nodes=None, edges=None, count_capacity=True, T_zone=
     """
     visited = [False for _ in range(len(adj))]
     if count_capacity:
-        Explore_capacity(x, adj, nodes, edges, visited, T_zone, priority, agent_id)
+        Explore_capacity(start_id, adj, nodes, edges, visited, T_zone, priority, agent_id)
     else:
         # Simply traverse through the topology of graph,
         # not counting capacity of edges
-        Explore(x, adj, visited)
-    return visited[y]
+        Explore(start_id, adj, visited)
+    return visited[end_id]
 
 def number_of_connected_components(adj, nodes=None, edges=None, count_capacity=True, T_zone=(0,None), priority=0, agent_id=None):
     """
@@ -144,7 +144,7 @@ def get_path(prev, last_nid, is_reversing_path=True):
 
 
 
-def dijkstras(adj, nodes, edges, T_zone_start, start_id, end_id, priority=0, agent_id=None):
+def dijkstras(graph, T_zone_start, start_id, end_id, priority=0, agent_id=None):
     """
     This method ues dijkstra alogorithm to find out the best path
     or find out that there is no path at all.
@@ -156,7 +156,10 @@ def dijkstras(adj, nodes, edges, T_zone_start, start_id, end_id, priority=0, age
         (after passing through the last edge)
 
     inputs
-        - adj: adjacent graph
+        - graph
+            - adj_graph: adjacent graph
+            - node_list
+            - edge_list
         - T_zone_start = (T_min, T_max)
         - start_id
         - end_id
@@ -167,6 +170,10 @@ def dijkstras(adj, nodes, edges, T_zone_start, start_id, end_id, priority=0, age
         - path/None: a sequence (list) of node_id from start_id to end_id
                      or "None" means no valid path
     """
+
+    adj = graph.adj_graph
+    nodes = graph.node_list
+    edges = graph.edge_list
 
     # We minimize the T_max
     id_opt_target = 1 # minimize the total duration_max
@@ -297,7 +304,7 @@ def generate_reverse_graph(adj):
     #
     return adj_reversed
 
-def dijkstras_backtrack(adj_in, nodes, edges, T_zone_end, start_id, end_id, priority=0, agent_id=None):
+def dijkstras_backtrack(graph, T_zone_end, start_id, end_id, priority=0, agent_id=None):
     """
     This method ues dijkstra alogorithm to find out the best path
     or find out that there is no path at all.
@@ -309,7 +316,10 @@ def dijkstras_backtrack(adj_in, nodes, edges, T_zone_end, start_id, end_id, prio
         (before passing through the first edge)
 
     inputs
-        - adj: original adjacent graph
+        - graph
+            - adj_graph: adjacent graph
+            - node_list
+            - edge_list
         - T_zone_end = (T_min, T_max)
         - start_id
         - end_id
@@ -320,6 +330,10 @@ def dijkstras_backtrack(adj_in, nodes, edges, T_zone_end, start_id, end_id, prio
         - path/None: a sequence (list) of node_id from start_id to end_id
                      or "None" means no valid path
     """
+    adj_in = graph.adj_graph
+    nodes = graph.node_list
+    edges = graph.edge_list
+
     # Get a reversed graph
     adj = generate_reverse_graph(adj_in)
 

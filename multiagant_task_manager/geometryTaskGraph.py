@@ -476,7 +476,7 @@ class GEOMETRY_TASK_GRAPH(object):
             - T_zone_total: Total occupation time (stamp) for this path, from start to end
         """
         # Note that top_priority_for_activated_agent is set to False
-        path = ge.dijkstras(self.adj_graph, self.node_list, self.edge_list, T_zone_start, start_id, end_id, False)
+        path = ge.dijkstras(self, T_zone_start, start_id, end_id, False)
         if path is None:
             # Non-reachable
             return None

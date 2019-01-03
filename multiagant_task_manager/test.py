@@ -53,10 +53,10 @@ res = ge.number_of_connected_components(graph.adj_graph, graph.node_list, graph.
 print("# of connected component = %d" % res)
 
 # Dijkstra
-path = ge.dijkstras(graph.adj_graph, graph.node_list, graph.edge_list, (0,0), 5, 6, False)
+path = ge.dijkstras(graph, (0,0), 5, 6, False)
 print("Dijkstra's path = " + str(path))
 
-path = ge.dijkstras_backtrack(graph.adj_graph, graph.node_list, graph.edge_list, (0,8), 5, 6, False)
+path = ge.dijkstras_backtrack(graph, (0,8), 5, 6, False)
 print("Dijkstra's path = " + str(path))
 
 # test removing agents
