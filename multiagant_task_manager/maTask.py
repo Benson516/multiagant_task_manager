@@ -8,8 +8,9 @@ class TASK(object):
     - T_zone = (min_pass_stamp, max_pass_stamp)
         - min_pass_stamp (int): estimated earliest time (unix stamp) for passing the edge
         - max_pass_stamp (int): estimated latest time (unix stamp) for passing the edge
+    - type (int): 0 - waypoint / 1 - start point / 2 - end point
     """
-    def __init__(self, task_id, agent_id, priority=0, T_zone=(0,None)):
+    def __init__(self, task_id, agent_id, priority=0, T_zone=(0,None), type=0):
         """
         * task_id (-1: only valid for NODEs, idle task, the agent stay there)
         * agent_id
@@ -17,6 +18,7 @@ class TASK(object):
         - T_zone = (min_pass_stamp, max_pass_stamp)
             - min_pass_stamp    (default: 0 sec., type: int)
             - max_pass_stamp    (default: None, infinity or eternal)
+        - type (default: 0, waypoint)
         """
         # The following parameters have default values
         self.task_id    = int(task_id) # (int(task_id) if (not task_id is None) else None)

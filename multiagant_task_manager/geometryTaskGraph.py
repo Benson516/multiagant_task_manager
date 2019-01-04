@@ -8,7 +8,7 @@ import maGraphEngines as ge
 # The class for geometry task graph
 class GEOMETRY_TASK_GRAPH(object):
     """
-    This is the container fo the geometry graph which contains nodes, edges, agents, and task.
+    This is the container of the geometry graph which contains nodes, edges, agents, and task.
     Properties (static)
         - num_nodes
         - num_edges
